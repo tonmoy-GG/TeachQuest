@@ -21,7 +21,7 @@ public class JobApplication {
     private LocalDateTime appliedAt;
 
     @Column(name = "status", nullable = false)
-    private String status = "PENDING"; // PENDING, HIRED, REJECTED
+    private String status = "PENDING";
 
     public JobApplication() {
     }
