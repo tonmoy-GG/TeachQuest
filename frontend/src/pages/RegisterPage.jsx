@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getRegisteredUsers, parseResponse, saveRegisteredUsers, stats, STORAGE_KEY } from '../utils/appData'
+import { parseResponse, stats, STORAGE_KEY } from '../utils/appData'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -27,25 +27,6 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      const existingUsers = getRegisteredUsers()
-      const alreadyExists = existingUsers.some((user) => (user.email || '').trim().toLowerCase() === form.email.trim().toLowerCase())
-
-      if (alreadyExists) {
-        throw new Error('An account with this email already exists. Please sign in instead.')
-      }
-
-      const newUser = {
-        username: form.username,
-        universityId: form.universityId,
-        contactNo: form.contactNo,
-        email: form.email,
-        password: form.password,
-        address: form.address,
-        userType: form.userType,
-      }
-
-      saveRegisteredUsers([...existingUsers, newUser])
-
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -67,12 +48,14 @@ export default function RegisterPage() {
       }
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        username: form.username,
-        email: form.email,
-        userType: form.userType,
-        universityId: form.universityId,
-        contactNo: form.contactNo,
-        address: form.address,
+        id: data.id,
+        username: data.username || form.username,
+        email: data.email || form.email,
+        userType: data.userType || form.userType,
+        universityId: data.universityId || form.universityId,
+        contactNo: data.contactNo || form.contactNo,
+        address: data.address || form.address,
+        totalPoints: data.totalPoints || 0,
       }))
 
       if (form.userType === 'teacher') {

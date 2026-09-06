@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TeachQuest</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <script>
+        function showError(errorMessage) {
+            alert(errorMessage);
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                // Determine user type or just generic login (API logic needs to support university_id effectively)
+                // Note: AuthController.loginUser expects "email" and "password" as per my implementation.
+                // The PHP used "university_id". I should update AuthController or map university_id to email/username logic?
+                // The User entity has UniversityId. I should update AuthController to handle generic loginIdentifier or stick to email.
+                // For direct migration, let's assume I will update the backend to match expectations or use username.
+                // Let's adapt the Controller to find by UniversityId OR Email.
+                // For now, I'll send it as 'email' property to match the User DTO, but I should fix the backend logic later.
+                // Actually, let's use a specialized LoginRequest DTO for clarity, but standard User object has generic fields.
+                // Let's conform to the User object fields: using username or universityId.
+
+                // Construct payload matching User.java fields
+                // User.java has 'universityId' field. I should use that if AuthController supports it.
+                // AuthController.loginUser takes specific email/password from object. I need to genericize it to LoginRequest?
+                // Or just use the User object and check non-null fields.
+
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        universityId: data.university_id,
+                        // username: data.university_id, // Fallback if backend checks username
+                        password: data.password
+                    })
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    if (user.userType === 'student') {
+                        // Store user session info in localStorage/sessionStorage since we are stateless REST
+                        sessionStorage.setItem('user', JSON.stringify(user));
+                        window.location.href = '/student-dashboard'; // Redirect to Student Dashboard
+                    } else {
+                        showError("Incorrect role for this login page.");
+                    }
+                } else {
+                    const errorDate = await response.text();
+                    showError(errorDate || "Login failed");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                showError("An error occurred. Please try again.");
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <!-- Branding Header -->
+    <header class="branding-header">
+        <div class="brand-logo">
+            <h2>TeachQuest</h2>
+        </div>
+    </header>
+
+    <div class="login-container">
+        <div class="login-card">
+            <h1>Welcome Back!</h1>
+            <div class="student-icon">
+                <img th:src="@{/student-icon.png}" alt="Student Icon">
+            </div>
+
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="university_id">University ID:</label>
+                    <input type="text" name="university_id" id="university_id" required><br><br>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" name="password" id="password" required><br><br>
+                </div>
+
+                <button type="submit" class="btn-login">Login</button>
+            </form>
+
+            <p class="register-link">Don't have an account? <a th:href="@{/register}">Register</a></p>
+            <p class="back-to-selection">
+                <a th:href="@{/}">Back to Selection</a>
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

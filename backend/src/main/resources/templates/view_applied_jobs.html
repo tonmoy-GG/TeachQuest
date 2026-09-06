@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applied Jobs - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <style>
+        .applied-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .applied-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .applied-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .job-main {
+            flex: 1;
+        }
+
+        .job-subject {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 8px;
+        }
+
+        .job-meta {
+            font-size: 1.05em;
+            color: #555;
+            display: flex;
+            gap: 20px;
+        }
+
+        .applied-info {
+            text-align: right;
+            border-left: 2px solid #eee;
+            padding-left: 30px;
+            min-width: 250px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-size: 0.9em;
+            font-weight: bold;
+            background: #E3F2FD;
+            color: #1976D2;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .apply-date {
+            font-size: 0.9em;
+            color: #888;
+            font-weight: bold;
+        }
+
+        .no-records {
+            text-align: center;
+            padding: 80px;
+            color: #888;
+            font-size: 1.2em;
+            background: #fdfdfd;
+            border-radius: 12px;
+        }
+
+        .back-nav {
+            margin-bottom: 20px;
+        }
+    </style>
+    <script>
+        function renderNav(user) {
+            const navButtons = document.querySelector('.nav-buttons');
+            if (!navButtons) return;
+
+            let html = '';
+            const isTeacher = user.userType === 'teacher';
+            const dashLink = isTeacher ? '/teacher-dashboard' : '/student-dashboard';
+
+            html += `<a id="dash-link" href="${dashLink}" class="nav-btn">Dashboard</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/job-board" class="nav-btn">Job Board</a>`;
+                html += `<a href="/view-applied-jobs" class="nav-btn active">My Applications</a>`;
+            } else {
+                html += `<a href="/view-applicants" class="nav-btn">My Posted Jobs</a>`;
+                html += `<a href="/job-portal" class="nav-btn">Post a New Job</a>`;
+                html += `<a href="/quiz-hub" class="nav-btn" style="background-color: #fce4ec; color: black !important;">Quiz Hub</a>`;
+            }
+
+            html += `<a href="/study-resources" class="nav-btn">Study Resources</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/upload-resource" class="nav-btn">Upload Resources</a>`;
+                html += `<a href="/question-bank" class="nav-btn" style="background-color: #D4F8E6;">Question Bank</a>`;
+            }
+            navButtons.innerHTML = html;
+        }
+
+        async function init() {
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                document.getElementById('welcome-user').textContent = "Hi, " + (user.name || user.username || "User") + "!!";
+                renderNav(user);
+
+                if (user.userType !== 'teacher') {
+                    document.getElementById('main-content').innerHTML = `
+                        <div class="container" style="text-align:center; padding: 100px 20px;">
+                            <h2 style="font-size: 2.5em; color: #dc3545;">Access Restricted</h2>
+                            <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">This page is only for Tutors.</p>
+                            <a href="/student-dashboard" class="nav-btn" style="display:inline-block; background:var(--primary-blue); color:white; text-decoration:none; padding: 12px 30px; border-radius: 8px;">Back to Dashboard</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                await fetchAppliedJobs(user.id);
+            } else {
+                window.location.href = '/login';
+            }
+        }
+
+        async function fetchAppliedJobs(userId) {
+            try {
+                const response = await fetch(`/api/applications/my-applications/${userId}`);
+                if (response.ok) {
+                    const applications = await response.json();
+                    renderApplications(applications);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function renderApplications(applications) {
+            const list = document.getElementById('applied-list');
+            list.innerHTML = '';
+            if (applications.length === 0) {
+                list.innerHTML = '<div class="no-records">You haven\'t applied for any jobs yet.</div>';
+                return;
+            }
+
+            for (const app of applications) {
+                const job = await fetchJobDetails(app.jobId);
+                if (job) {
+                    const status = (app.status || 'PENDING').toUpperCase();
+                    const card = document.createElement('div');
+                    card.className = 'applied-card';
+                    card.innerHTML = `
+                        <div class="job-main">
+                            <div class="job-subject">${job.subject}</div>
+                            <div class="job-meta">
+                                <span>📍 ${job.address}</span>
+                                <span>💰 ${job.salary}</span>
+                            </div>
+                        </div>
+                        <div class="applied-info">
+                            <span class="status-badge">Status: ${status}</span>
+                            <div class="apply-date">Applied on: ${new Date(app.appliedAt).toLocaleDateString()}</div>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                }
+            }
+        }
+
+        async function fetchJobDetails(jobId) {
+            try {
+                const response = await fetch(`/api/jobs/${jobId}`);
+                if (response.ok) return await response.json();
+            } catch (err) { console.error(err); }
+            return null;
+        }
+
+        function logout() { sessionStorage.removeItem('user'); window.location.href = '/'; }
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div class="welcome-text" id="welcome-user">Hi!!</div>
+            <div class="avatar-circle"><img src="https://i.pravatar.cc/150?u=user" alt="Avatar"></div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-buttons">
+            <!-- Dynamic Nav Injected here -->
+        </div>
+    </div>
+
+    <main id="main-content">
+        <div class="container">
+            <div class="back-nav">
+                <a href="/job-board" style="text-decoration:none; color:var(--primary-blue); font-weight:bold;">← Back
+                    to Job Board</a>
+            </div>
+            <h2>My Job Applications</h2>
+            <div id="applied-list" class="applied-list">
+                <div class="no-records">Loading applied jobs...</div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

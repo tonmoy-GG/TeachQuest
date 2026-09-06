@@ -1,0 +1,238 @@
+@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap');
+
+body {
+    font-family: 'Quantico';
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    font-weight: 700;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #fff;
+    position: relative;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-left h2 {
+    margin: 0;
+}
+
+.logo {
+    width: 40px;
+    /* Adjust size of the logo as needed */
+    margin-right: 10px;
+}
+
+.header-right h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.container {
+    width: 100%;
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    font-family: 'Quantico';
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+select,
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+textarea {
+    resize: vertical;
+    height: 100px;
+}
+
+.upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.upload-area:hover {
+    background-color: #f9f9f9;
+}
+
+.upload-area img {
+    width: 50px;
+    margin-bottom: 10px;
+}
+
+.browse-button,
+.upload-button {
+    background-color: #52A7F8;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-family: 'Quantico';
+    font-weight: 650;
+}
+
+.upload-button {
+    background-color: #D9D9D9;
+    color: black;
+    font-family: 'Quantico';
+    font-weight: 650;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+
+.browse-button:hover,
+.upload-button:hover {
+    background-color: #45a049;
+}
+
+.upload-button-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.upload-button {
+    width: 100%;
+    /* Ensures the upload button takes full width */
+}
+
+@media screen and (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+
+    select,
+    textarea,
+    .browse-button,
+    .upload-button {
+        font-size: 14px;
+    }
+
+    .header-left,
+    .header-right {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .header-left h2 {
+        font-size: 18px;
+    }
+}
+
+.resource-type-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.type-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    font-family: 'Quantico';
+    font-weight: 700;
+}
+
+.type-btn.active {
+    background: #52A7F8;
+    color: white;
+    border-color: #52A7F8;
+}
+
+.url-input-group {
+    margin-top: 20px;
+}
+
+.url-input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-family: 'Quantico';
+}
+
+.hidden {
+    display: none !important;
+}
+
+.progress-container {
+    margin-top: 20px;
+    width: 100%;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    overflow: hidden;
+    display: none;
+    border: 1px solid #ddd;
+}
+
+.progress-bar {
+    height: 12px;
+    background: linear-gradient(90deg, #52A7F8, #3a8fd9);
+    width: 0%;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+.upload-status {
+    font-size: 13px;
+    color: #666;
+    margin-top: 8px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.cloud-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #e1f0ff;
+    color: #007bff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    margin-top: 10px;
+}

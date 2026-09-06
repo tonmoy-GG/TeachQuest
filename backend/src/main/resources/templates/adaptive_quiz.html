@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assessment - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <link rel="stylesheet" th:href="@{/quiz_premium.css}">
+    <style>
+        body {
+            padding-top: 80px;
+            transition: background 0.5s ease;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .question-card {
+            animation: fadeIn 0.4s ease;
+            display: none;
+        }
+
+        .question-card.active {
+            display: block;
+        }
+
+        .options-grid {
+            margin-top: 25px;
+        }
+
+        .short-answer-area {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1.1rem;
+            margin-top: 20px;
+            outline-color: var(--primary-blue);
+            background: #fdfdfd;
+        }
+
+        /* Interactive Feedback Overlay */
+        .feedback-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 3000;
+            display: none;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 50px 20px;
+            overflow-y: auto;
+            backdrop-filter: blur(5px);
+        }
+
+        .feedback-card {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: 50px;
+        }
+
+        .close-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: #888;
+            transition: color 0.3s;
+        }
+
+        .close-overlay:hover {
+            color: #333;
+        }
+
+        .score-box {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 30px;
+        }
+
+        .score-circle-svg {
+            transform: rotate(-90deg);
+            width: 150px;
+            height: 150px;
+        }
+
+        .score-circle-bg {
+            fill: none;
+            stroke: #eee;
+            stroke-width: 10;
+        }
+
+        .score-circle-progress {
+            fill: none;
+            stroke: var(--primary-blue);
+            stroke-width: 10;
+            stroke-linecap: round;
+            stroke-dasharray: 440;
+            stroke-dashoffset: 440;
+            transition: stroke-dashoffset 2s ease-out;
+        }
+
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            font-weight: bold;
+            font-family: 'Quantico';
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            text-align: left;
+            margin-top: 30px;
+        }
+
+        .insight-item {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 5px solid var(--primary-blue);
+            transition: transform 0.3s;
+        }
+
+        .insight-item:hover {
+            transform: translateX(5px);
+            background: #f1f5f9;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3001;
+        }
+    </style>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div id="welcome-user">Quiz Session</div>
+            <button class="logout-btn" onclick="exitQuiz()">Exit</button>
+        </div>
+    </header>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <div>
+                <span id="course-name"
+                    style="font-weight: bold; color: var(--primary-blue); font-size: 1.2rem;">Course</span>
+                <span id="q-counter"
+                    style="margin-left: 15px; color: #888; background: #eee; padding: 4px 12px; border-radius: 20px; font-size: 0.9rem;">Initializing...</span>
+            </div>
+            <div class="timer-badge"
+                style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 8px 15px; border-radius: 10px; font-weight: bold;">
+                ⏱️ <span id="timer">00:00</span>
+            </div>
+        </div>
+
+        <div class="progress-container" style="height: 10px; border-radius: 5px; margin-bottom: 30px;">
+            <div id="progress-bar" class="progress-bar"
+                style="border-radius: 5px; background: linear-gradient(90deg, var(--primary-blue), #6c5ce7);"></div>
+        </div>
+
+        <div id="questions-container">
+            <div class="card" id="loading-msg" style="text-align: center; padding: 80px;">
+                <div class="spinner" style="margin: 0 auto 20px;"></div>
+                <p style="font-size: 1.2rem; color: #666;">Synchronizing with AI Tutor...</p>
+            </div>
+        </div>
+
+        <div id="controls"
+            style="margin-top: 40px; display: flex; justify-content: space-between; align-items: center;">
+            <button class="btn btn-outline" onclick="prevQuestion()" id="prev-btn" disabled
+                style="padding: 12px 30px;">← Previous</button>
+            <div id="index-dots" style="display: flex; gap: 8px;"></div>
+            <button class="btn btn-primary" onclick="nextQuestion()" id="next-btn" style="padding: 12px 30px;">Next
+                Question →</button>
+            <button class="btn btn-success" onclick="finishQuiz()" id="finish-btn"
+                style="display: none; background: #00b894; color: white; padding: 12px 40px; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);">Submit
+                Final Script</button>
+        </div>
+    </div>
+
+    <!-- Enhanced Result Overlay -->
+    <div id="feedback-overlay" class="feedback-overlay">
+        <div class="feedback-card">
+            <button class="close-overlay" onclick="closeFeedback()">×</button>
+            <h2 style="font-family: 'Quantico'; margin-bottom: 10px;">AI Performance Analysis</h2>
+
+            <div class="score-box">
+                <svg class="score-circle-svg">
+                    <circle class="score-circle-bg" cx="75" cy="75" r="70"></circle>
+                    <circle id="score-circle-fill" class="score-circle-progress" cx="75" cy="75" r="70"></circle>
+                </svg>
+                <div class="score-text" id="final-score">0%</div>
+            </div>
+
+            <h3 id="result-title" style="margin-bottom: 15px; color: #2d3436;">Evaluation Complete</h3>
+            <p id="final-feedback"
+                style="font-size: 1.1rem; line-height: 1.6; color: #636e72; max-width: 600px; margin: 0 auto 30px;"></p>
+
+            <div style="text-align: left; margin-top: 40px; border-top: 1px solid #eee; padding-top: 30px;">
+                <h4 style="display: flex; align-items: center; gap: 10px; font-size: 1.2rem; color: #2d3436;">
+                    <span>🤖</span> AI Insights & Corrections
+                </h4>
+                <div id="insights-list" class="insights-grid"></div>
+            </div>
+
+            <div style="margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <button class="btn btn-outline" onclick="closeFeedback()" style="width: 100%;">Review Answers</button>
+                <button class="btn btn-primary" onclick="window.location.href='/quiz-hub'"
+                    style="width: 100%; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);">Back to Hub</button>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="confetti-canvas" class="celebration"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        let questions = [];
+        let currentIndex = 0;
+        let answers = {};
+        let startTime = Date.now();
+        let timerInterval;
+
+        async function init() {
+            try {
+                const stored = sessionStorage.getItem('ai_quiz_questions');
+                if (!stored) { window.location.href = '/quiz-hub'; return; }
+
+                questions = JSON.parse(stored);
+                if (!Array.isArray(questions) || questions.length === 0) throw new Error("Question list is empty.");
+
+                document.getElementById('course-name').textContent = sessionStorage.getItem('ai_quiz_course') || 'AI Quiz';
+                document.getElementById('loading-msg').style.display = 'none';
+
+                renderQuestions();
+                renderDots();
+                updateProgress();
+                startTimer();
+            } catch (err) {
+                document.getElementById('loading-msg').innerHTML = `<p style="color:#d63031; font-weight:bold;">⚠️ Error: ${err.message}</p>`;
+            }
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questions-container');
+            const type = sessionStorage.getItem('ai_quiz_type');
+
+            questions.forEach((q, idx) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = `question-card card ${idx === 0 ? 'active' : ''}`;
+                qDiv.id = `q-${idx}`;
+
+                let html = `<div style="color:var(--primary-blue); font-weight:bold; margin-bottom:10px; text-transform:uppercase; font-size:0.8rem;">Question ${idx + 1}</div>`;
+                html += `<h2 style="line-height:1.4; margin-bottom:25px;">${q.question || "No question provided."}</h2>`;
+
+                if (type === 'MCQ') {
+                    html += `<div class="options-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">`;
+                    const opts = q.options || [];
+                    opts.forEach(opt => {
+                        const letter = opt ? opt.charAt(0) : '?';
+                        const text = opt ? opt.substring(2) : '...';
+                        html += `
+                            <div class="option-card" onclick="selectMCQ(${idx}, '${letter}')" id="opt-${idx}-${letter}" style="margin:0; text-align:left; border-width:2px;">
+                                <div class="option-marker">${letter}</div>
+                                <div style="font-weight:500;">${text}</div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                } else {
+                    html += `
+                        <textarea class="short-answer-area" placeholder="Write your conceptual answer here... Be technical and concise." 
+                        oninput="saveShortAnswer(${idx}, this.value)"></textarea>
+                    `;
+                }
+
+                qDiv.innerHTML = html;
+                container.appendChild(qDiv);
+            });
+        }
+
+        function renderDots() {
+            const dots = document.getElementById('index-dots');
+            questions.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.style.cssText = "width:10px; height:10px; border-radius:50%; background:#ddd; transition:all 0.3s;";
+                dot.id = `dot-${idx}`;
+                dots.appendChild(dot);
+            });
+        }
+
+        function selectMCQ(qIdx, letter) {
+            answers[qIdx] = letter;
+            document.querySelectorAll(`#q-${qIdx} .option-card`).forEach(el => el.classList.remove('selected'));
+            document.getElementById(`opt-${qIdx}-${letter}`).classList.add('selected');
+            document.getElementById(`dot-${qIdx}`).style.background = 'var(--primary-blue)';
+        }
+
+        function saveShortAnswer(qIdx, val) {
+            answers[qIdx] = val;
+            document.getElementById(`dot-${qIdx}`).style.background = val.length > 5 ? 'var(--primary-blue)' : '#ddd';
+        }
+
+        function nextQuestion() {
+            if (currentIndex < questions.length - 1) {
+                document.getElementById(`q-${currentIndex}`).classList.remove('active');
+                currentIndex++;
+                document.getElementById(`q-${currentIndex}`).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                document.getElementById(`q-${currentIndex}`).classList.remove('active');
+                currentIndex--;
+                document.getElementById(`q-${currentIndex}`).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentIndex + 1) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('q-counter').textContent = `Question ${currentIndex + 1}/${questions.length}`;
+
+            document.querySelectorAll('#index-dots div').forEach((d, i) => {
+                d.style.transform = i === currentIndex ? "scale(1.5)" : "scale(1)";
+                if (i === currentIndex && d.style.background !== 'var(--primary-blue)') d.style.background = '#bbb';
+            });
+
+            document.getElementById('prev-btn').disabled = currentIndex === 0;
+            if (currentIndex === questions.length - 1) {
+                document.getElementById('next-btn').style.display = 'none';
+                document.getElementById('finish-btn').style.display = 'block';
+            } else {
+                document.getElementById('next-btn').style.display = 'block';
+                document.getElementById('finish-btn').style.display = 'none';
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                const seconds = Math.floor((Date.now() - startTime) / 1000);
+                const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+                const ss = String(seconds % 60).padStart(2, '0');
+                document.getElementById('timer').textContent = `${mm}:${ss}`;
+            }, 1000);
+        }
+
+        async function finishQuiz() {
+            if (!confirm("Are you ready to submit your final script for AI evaluation?")) return;
+
+            clearInterval(timerInterval);
+            document.body.style.cursor = 'wait';
+            const overlay = document.getElementById('feedback-overlay');
+            overlay.style.display = 'flex';
+
+            let totalScore = 0;
+            let aiInsights = "";
+            const type = sessionStorage.getItem('ai_quiz_type');
+
+            if (type === 'MCQ') {
+                let correctCount = 0;
+                questions.forEach((q, idx) => {
+                    const isCorrect = answers[idx] === q.correctAnswer;
+                    if (isCorrect) correctCount++;
+                    aiInsights += `
+                        <div class="insight-item" style="border-left-color: ${isCorrect ? '#00b894' : '#d63031'}">
+                            <strong>Question ${idx + 1}:</strong> ${isCorrect ? '✅ Correct' : '❌ Incorrect'}<br>
+                            <small>${q.explanation || 'No explanation available.'}</small>
+                        </div>`;
+                });
+                totalScore = Math.round((correctCount / questions.length) * 100);
+            } else {
+                document.getElementById('final-feedback').textContent = "🤖 AI is analyzing your script... High precision grading in progress.";
+                const bulkPayload = questions.map((q, i) => ({
+                    question: q.question,
+                    userAnswer: answers[i] || "No answer provided.",
+                    correctAnswer: q.expectedContent || q.explanation
+                }));
+
+                try {
+                    const res = await fetch('/api/quizzes/evaluate-bulk', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bulkPayload)
+                    });
+                    const bulkResults = await res.json();
+
+                    let scoresArr = [];
+                    bulkResults.forEach((data, i) => {
+                        scoresArr.push(data.score || 0);
+                        aiInsights += `
+                            <div class="insight-item">
+                                <strong>Question ${i + 1} Analysis:</strong><br>
+                                <p style="margin:5px 0;">${data.feedback}</p>
+                                <div style="font-weight:bold; color:var(--primary-blue);">Impact Score: ${data.score}%</div>
+                            </div>`;
+                    });
+                    totalScore = Math.round(scoresArr.reduce((a, b) => a + b, 0) / questions.length);
+                } catch (e) {
+                    console.error("Bulk evaluation failed:", e);
+                    totalScore = 0;
+                }
+            }
+
+            // Animate score
+            const circle = document.getElementById('score-circle-fill');
+            const offset = 440 - (440 * totalScore / 100);
+            setTimeout(() => { circle.style.strokeDashoffset = offset; }, 100);
+
+            let current = 0;
+            const scoreDisplay = document.getElementById('final-score');
+            const counter = setInterval(() => {
+                if (current >= totalScore) clearInterval(counter);
+                else { current++; scoreDisplay.textContent = current + "%"; }
+            }, 20);
+
+            document.getElementById('result-title').textContent = totalScore >= 80 ? "🏆 Outstanding Performance!" : (totalScore >= 50 ? "📚 Good Effort!" : "🔍 Keep Practicing!");
+            document.getElementById('final-feedback').textContent = totalScore >= 80 ? "You've mastered these concepts. Your technical depth is impressive." : "You have a solid foundation, but some technical nuances need review.";
+            document.getElementById('insights-list').innerHTML = aiInsights;
+
+            if (totalScore >= 70) {
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            }
+
+            document.body.style.cursor = 'default';
+
+            // Save result to server for realistic "Past Results"
+            saveResultToDB(totalScore);
+        }
+
+        async function saveResultToDB(totalScore) {
+            const userStr = sessionStorage.getItem('user');
+            if (!userStr) return;
+            const user = JSON.parse(userStr);
+
+            const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+            const quizTitle = (sessionStorage.getItem('ai_quiz_course') || 'General') + " (" + (sessionStorage.getItem('ai_quiz_type') || 'Quiz') + ")";
+
+            const payload = {
+                studentId: user.universityId || user.username || user.id,
+                studentName: user.name || user.username,
+                quizTitle: quizTitle,
+                score: totalScore,
+                totalQuestions: questions.length,
+                timeTakenSeconds: timeTaken
+            };
+
+            try {
+                const response = await fetch('/api/quizzes/save-result', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    console.log("Quiz result saved successfully");
+                } else {
+                    console.error("Failed to save quiz result:", response.statusText);
+                }
+            } catch (err) {
+                console.error("Failed to save result:", err);
+            }
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedback-overlay').style.display = 'none';
+        }
+
+        function exitQuiz() { if (confirm("Exit session? Unsaved progress will be lost.")) window.location.href = '/quiz-hub'; }
+
+        window.onload = init;
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,346 @@
+@import url('https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap');
+
+:root {
+    --bg-color: #f4f7fa;
+    --card-bg: #ffffff;
+    --text-color: #333333;
+    --text-light: #555555;
+    --accent-blue: #88D3EC;
+    --accent-purple: #6200ee;
+    --accent-teal: #5FE0D8;
+    --accent-mint: #D4F8E6;
+    --accent-aqua: aqua;
+    --header-bg: #ffffff;
+    --danger: #ff4757;
+    --success: #2ed573;
+    --warning: #ffa502;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Quantico', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+}
+
+/* --- Shared Layouts --- */
+.quiz-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- Headers & Titles --- */
+h1,
+h2,
+h3 {
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #000;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #000;
+}
+
+/* --- Buttons --- */
+.btn {
+    font-family: 'Quantico', sans-serif;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    /* Standard rounded */
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background-color: var(--accent-purple);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #5a00d3;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: var(--accent-blue);
+    color: black;
+}
+
+.btn-secondary:hover {
+    filter: brightness(0.95);
+    transform: translateY(-2px);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--accent-purple);
+    color: var(--accent-purple);
+}
+
+.btn-outline:hover {
+    background: var(--accent-purple);
+    color: white;
+}
+
+/* --- Progress & Timer --- */
+.progress-container {
+    background: #e9ecef;
+    border-radius: 10px;
+    height: 10px;
+    width: 100%;
+    margin: 20px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: var(--accent-purple);
+    height: 100%;
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+.timer-badge {
+    background: #FFEAA7;
+    color: #d35400;
+    padding: 8px 15px;
+    border-radius: 50px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --- Question Styles --- */
+.difficulty-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.diff-easy {
+    background: #D4F8E6;
+    color: #333;
+}
+
+.diff-medium {
+    background: #FFEAA7;
+    color: #333;
+}
+
+.diff-hard {
+    background: #ffcccc;
+    color: #c0392b;
+}
+
+.question-text {
+    font-size: 1.3rem;
+    line-height: 1.6;
+    margin: 20px 0 30px;
+}
+
+.options-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.option-card {
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    padding: 15px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.option-card:hover {
+    background: #fff;
+    border-color: var(--accent-blue);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.option-card.selected {
+    border-color: var(--accent-purple);
+    background: #f3e5f5;
+}
+
+.option-marker {
+    background: #ddd;
+    color: #555;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+}
+
+.option-card.selected .option-marker {
+    background: var(--accent-purple);
+    color: white;
+}
+
+/* --- Section Tabs (for Section Quiz) --- */
+.section-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    padding: 10px 20px;
+    font-family: inherit;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    color: var(--accent-purple);
+    border-bottom-color: var(--accent-purple);
+}
+
+/* --- Anti-Cheating Modal --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    /* Flex when active */
+    backdrop-filter: blur(5px);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 500px;
+    animation: popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.warning-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    display: block;
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* --- Results Page Specifics --- */
+.result-summary {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.score-display {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--accent-purple);
+    margin: 10px 0;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.ai-feedback-box {
+    background: #E3F2FD;
+    /* Light Blue */
+    border-left: 5px solid #2196F3;
+    padding: 20px;
+    border-radius: 5px;
+    margin-top: 30px;
+}
+
+.weak-area-tag {
+    background: #ffebee;
+    /* Light Red */
+    color: #c62828;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}

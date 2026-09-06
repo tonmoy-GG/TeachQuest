@@ -1,0 +1,341 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Resources - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <style>
+        body {
+            background: #f2f2f2;
+        }
+
+        .nav-container {
+            margin-top: 0;
+        }
+
+        .content-shell {
+            display: flex;
+            align-items: flex-start;
+            max-width: 1450px;
+            margin: 0 auto;
+            padding: 10px 40px 40px;
+            gap: 35px;
+        }
+
+        .trimester-sidebar {
+            width: 260px;
+            min-width: 260px;
+            padding: 18px 0 20px 0;
+            border-right: 1px solid #d9d9d9;
+            background: transparent;
+        }
+
+        .trimester-sidebar h2 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin: 0 0 18px 0;
+            padding-left: 18px;
+            border-left: 4px solid var(--primary-blue);
+            color: #000;
+        }
+
+        .trimester-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .trimester-item {
+            display: block;
+        }
+
+        .trimester-item a {
+            display: block;
+            padding: 18px 14px;
+            border-radius: 10px;
+            background: #e9e9e9;
+            color: #232323;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .trimester-item a:hover,
+        .trimester-item a.active {
+            background: #dfeef8;
+            box-shadow: inset 0 0 0 1px #d0dfe8;
+        }
+
+        .course-panel {
+            flex: 1;
+            padding-top: 22px;
+        }
+
+        .course-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 26px;
+            align-items: start;
+        }
+
+        .course-card {
+            background: #f4f4f4;
+            border: 1px solid #dfe3e5;
+            border-radius: 12px;
+            padding: 22px 24px 18px;
+            min-height: 230px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .course-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .course-code {
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #000;
+            display: inline-block;
+            padding-bottom: 6px;
+            border-bottom: 4px solid var(--primary-blue);
+        }
+
+        .course-meta {
+            margin-top: 10px;
+            margin-bottom: 18px;
+            font-size: 1rem;
+            color: #3b3b3b;
+            font-weight: 700;
+        }
+
+        .folder-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(150px, 1fr));
+            gap: 12px 18px;
+        }
+
+        .resource-folder {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #eaeaea;
+            border-radius: 8px;
+            padding: 10px 12px;
+            min-height: 48px;
+        }
+
+        .folder-icon {
+            font-size: 1.3rem;
+            line-height: 1;
+        }
+
+        .folder-link {
+            color: #1c1c1c;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.98rem;
+        }
+
+        .folder-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 20px;
+            color: #555;
+            font-weight: 700;
+        }
+
+        @media (max-width: 980px) {
+            .content-shell {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .trimester-sidebar {
+                width: 100%;
+                min-width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #d9d9d9;
+            }
+
+            .course-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script>
+        async function fetchCourses() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const deptFilter = urlParams.get('department') || 'all';
+                const trimFilter = urlParams.get('trimester') || 'all';
+
+                const deptElem = document.getElementById('department');
+                const trimElem = document.getElementById('trimester');
+                if (deptElem) deptElem.value = deptFilter;
+                if (trimElem) trimElem.value = trimFilter;
+
+                const response = await fetch('/api/resources/courses');
+                if (!response.ok) return;
+
+                let courses = await response.json();
+                if (deptFilter !== 'all') {
+                    courses = courses.filter(c => c.department === deptFilter);
+                }
+                if (trimFilter !== 'all') {
+                    courses = courses.filter(c => c.semester == trimFilter);
+                }
+                renderCourses(courses);
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+
+        function renderCourses(courses) {
+            const container = document.querySelector('.course-container');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (!courses || courses.length === 0) {
+                container.innerHTML = '<div class="empty-state">No resources found for the selected filters.</div>';
+                return;
+            }
+
+            const categories = ['Class Recording', 'Class Notes', 'CT Questions', 'MID Questions', 'Final Questions'];
+
+            courses.forEach(course => {
+                const card = document.createElement('div');
+                card.className = 'course-card';
+
+                const foldersHtml = categories.map(category => `
+                    <div class="resource-folder">
+                        <span class="folder-icon">📁</span>
+                        <a href="/view_files?course=${encodeURIComponent(course.courseCode)}&type=${encodeURIComponent(category)}" class="folder-link">${category}</a>
+                    </div>
+                `).join('');
+
+                card.innerHTML = `
+                    <div class="course-header">
+                        <h2 class="course-code">${course.courseCode}</h2>
+                    </div>
+                    <p class="course-meta">Dept: ${course.department} | Trim: ${course.semester}</p>
+                    <div class="folder-list">${foldersHtml}</div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function renderNav(user) {
+            const navButtons = document.querySelector('.nav-buttons');
+            if (!navButtons) return;
+
+            const isTeacher = user && user.userType === 'teacher';
+            const dashLink = isTeacher ? '/teacher-dashboard' : '/student-dashboard';
+
+            let html = `<a id="dash-link" href="${dashLink}" class="nav-btn">Dashboard</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/job-board" class="nav-btn">Job Board</a>`;
+                html += `<a href="/view-applied-jobs" class="nav-btn">My Applications</a>`;
+            } else {
+                html += `<a href="/view-applicants" class="nav-btn">My Posted Jobs</a>`;
+                html += `<a href="/job-portal" class="nav-btn">Post a New Job</a>`;
+            }
+
+            html += `<a href="/study-resources" class="nav-btn active">Study Resources</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/upload-resource" class="nav-btn">Upload Resources</a>`;
+                html += `<a href="/question-bank" class="nav-btn" style="background-color: #D4F8E6;">Question Bank</a>`;
+            }
+
+            navButtons.innerHTML = html;
+        }
+
+        function logout() {
+            sessionStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = sessionStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            document.getElementById('welcome-user').textContent = 'Hi, ' + (user.name || user.username || 'User') + '!!';
+            renderNav(user);
+            fetchCourses();
+        });
+    </script>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <form id="filter-form" method="GET" action="/study-resources" style="display:flex; gap:10px; align-items:center; margin-right: 12px;">
+                <select name="department" id="department" style="padding: 8px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #cfcfcf; background: #fff;">
+                    <option value="all">All Depts</option>
+                    <option value="Computer Science">CSE</option>
+                    <option value="BBA">BBA</option>
+                </select>
+                <select name="trimester" id="trimester" style="padding: 8px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #cfcfcf; background: #fff;">
+                    <option value="all">All Trim</option>
+                    <option th:each="i : ${#numbers.sequence(1, 8)}" th:value="${i}" th:text="'Trimester ' + ${i}"></option>
+                </select>
+                <button type="submit" class="logout-btn" style="background: #AFCCF1; padding: 8px 14px;">Filter</button>
+            </form>
+            <div class="welcome-text" id="welcome-user">Hi!!</div>
+            <div class="avatar-circle">
+                <img src="https://i.pravatar.cc/150?u=user" alt="Avatar">
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-buttons"></div>
+    </div>
+
+    <div class="content-shell">
+        <aside class="trimester-sidebar">
+            <h2>All Trimesters</h2>
+            <div class="trimester-list">
+                <div class="trimester-item"><a href="/study-resources?trimester=1">Trimester 1</a></div>
+                <div class="trimester-item"><a href="/study-resources?trimester=2">Trimester 2</a></div>
+                <div class="trimester-item"><a href="/study-resources?trimester=3">Trimester 3</a></div>
+                <div class="trimester-item"><a href="/study-resources?trimester=4">Trimester 4</a></div>
+                <div class="trimester-item"><a href="/study-resources?trimester=5">Trimester 5</a></div>
+                <div class="trimester-item"><a href="/study-resources?trimester=6">Trimester 6</a></div>
+                <div class="trimester-item"><a href="/study-resources?trimester=7">Trimester 7</a></div>
+                <div class="trimester-item"><a href="/study-resources?trimester=8">Trimester 8</a></div>
+            </div>
+        </aside>
+
+        <main class="course-panel">
+            <div class="course-container"></div>
+        </main>
+    </div>
+</body>
+
+</html>

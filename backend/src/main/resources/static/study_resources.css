@@ -1,0 +1,215 @@
+@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Quantico', sans-serif;
+}
+
+body {
+    background-color: #f8fafc;
+    color: #333;
+    overflow-x: hidden;
+}
+
+/* Header Section */
+#main-header {
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    height: 70px;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    border-bottom: 2px solid #000;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-left img {
+    height: 35px;
+    width: auto;
+}
+
+.page-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #000;
+}
+
+.header-center #filter-form {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-center label {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.header-center select {
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 13px;
+    background: white;
+}
+
+.filter-btn {
+    padding: 4px 12px;
+    background: white;
+    border: 1px solid #999;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.header-right .brand-name {
+    font-size: 28px;
+    font-weight: bold;
+    color: #000;
+}
+
+/* Main Layout */
+.main-layout {
+    display: flex;
+    margin-top: 70px;
+    min-height: calc(100vh - 70px);
+}
+
+/* Sidebar */
+#sidebar-nav {
+    width: 220px;
+    background: #fdfdfd;
+    padding: 15px;
+    position: fixed;
+    height: calc(100vh - 70px);
+    overflow-y: auto;
+    border-right: 1px solid #eee;
+}
+
+.sidebar-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #000;
+}
+
+.sidebar-header {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 12px;
+    padding-left: 2px;
+}
+
+.trimester-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.trimester-item a {
+    display: block;
+    padding: 8px 10px;
+    background: #AFCCF1;
+    color: black;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.trimester-item a:hover,
+.trimester-item a.active {
+    background: #9abce8;
+}
+
+/* Content Area */
+#content-area {
+    margin-left: 220px;
+    padding: 25px;
+    flex: 1;
+    background: #fff;
+}
+
+.course-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Course Cards */
+.course-card {
+    background: #D9D9D9;
+    border-radius: 8px;
+    padding: 20px;
+    width: 480px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.course-code {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #000;
+    letter-spacing: 0.5px;
+}
+
+.course-detail {
+    font-size: 14px;
+    margin-bottom: 4px;
+    color: #111;
+    font-weight: 500;
+}
+
+.folder-list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.resource-folder {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.folder-icon {
+    width: 22px;
+    height: auto;
+}
+
+.folder-link {
+    text-decoration: none;
+    color: #000;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.folder-link:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .header-center {
+        display: none;
+    }
+
+    .course-card {
+        width: 100%;
+    }
+}

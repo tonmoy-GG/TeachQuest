@@ -3,6 +3,9 @@ export const POSTED_JOBS_KEY = 'teachquest_posted_jobs'
 export const TEACHER_APPLICATIONS_KEY = 'teachquest_teacher_applications'
 export const USERS_KEY = 'teachquest_users'
 export const CHAT_MESSAGES_KEY = 'teachquest_chat_messages'
+export const UPLOADED_RESOURCES_KEY = 'teachquest_uploaded_resources'
+export const RESOURCE_BOOKMARKS_KEY = 'teachquest_resource_bookmarks'
+export const USER_POINTS_KEY = 'teachquest_user_points'
 
 export function getUserScopedStorageKey(prefix) {
   const currentUser = getStoredUser()
@@ -10,11 +13,31 @@ export function getUserScopedStorageKey(prefix) {
   return userEmail ? `${prefix}_${userEmail}` : prefix
 }
 
+export function normalizeStudyResource(resource) {
+  if (!resource) return null
+  const rawPath = String(resource.filePath || resource.fileUrl || '')
+  const fileUrl = rawPath.startsWith('http') || rawPath.startsWith('data:')
+    ? rawPath
+    : `/${rawPath.replace(/^\/+/, '')}`
+
+  return {
+    ...resource,
+    id: resource.id,
+    code: resource.courseCode || resource.code || 'Resource',
+    trimester: resource.semester || resource.trimester || 'General',
+    fileName: resource.fileName || rawPath.split('/').pop() || resource.courseCode || 'Resource file',
+    fileUrl,
+    upvotePoints: Number(resource.upvotePoints) || 0,
+    verified: Boolean(resource.verified),
+  }
+}
+
 export const navItems = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'My Posted Jobs', to: '/posted-jobs' },
   { label: 'Post a New Job', to: '/jobs' },
   { label: 'Study Resources', to: '/resources' },
+  { label: 'Community Q&A', to: '/questions' },
   { label: 'Chat', to: '/chat' },
 ]
 
@@ -72,11 +95,81 @@ export const resourceCategories = [
   { label: 'Final Questions', icon: 'final' },
 ]
 
-export const courseCards = [
-  { code: 'CSE3711', dept: 'Computer Science', trim: 10 },
-  { code: 'CSE3721', dept: 'Computer Science', trim: 10 },
-  { code: 'CSE3731', dept: 'Computer Science', trim: 10 },
-]
+export const resourceTypeMeta = {
+  recording: { label: 'Class Recording', icon: 'recording' },
+  notes: { label: 'Class Notes', icon: 'notes' },
+  ct: { label: 'CT Questions', icon: 'quiz' },
+  mid: { label: 'MID Questions', icon: 'exam' },
+  final: { label: 'Final Questions', icon: 'final' },
+  question: { label: 'CT Questions', icon: 'quiz' },
+}
+
+export const courseCards = []
+
+export function getUploadedResources() {
+  try {
+    const raw = localStorage.getItem(UPLOADED_RESOURCES_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+export function saveUploadedResources(resources) {
+  localStorage.setItem(UPLOADED_RESOURCES_KEY, JSON.stringify(resources))
+}
+
+export function getResourceBookmarks() {
+  try {
+    const raw = localStorage.getItem(getUserScopedStorageKey(RESOURCE_BOOKMARKS_KEY))
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed.map(String) : []
+  } catch {
+    return []
+  }
+}
+
+export function saveResourceBookmarks(bookmarks) {
+  localStorage.setItem(getUserScopedStorageKey(RESOURCE_BOOKMARKS_KEY), JSON.stringify(bookmarks))
+}
+
+export function getUserPoints() {
+  const email = String(getStoredUser()?.email || '').trim().toLowerCase()
+  if (!email) return { total: 0, sharedResourceIds: [] }
+
+  try {
+    const allPoints = JSON.parse(localStorage.getItem(USER_POINTS_KEY) || '{}')
+    const profile = allPoints[email] || {}
+    return {
+      total: Number(profile.total) || 0,
+      sharedResourceIds: Array.isArray(profile.sharedResourceIds) ? profile.sharedResourceIds.map(String) : [],
+    }
+  } catch {
+    return { total: 0, sharedResourceIds: [] }
+  }
+}
+
+export function awardResourcePoints(resourceId, points = 10) {
+  const email = String(getStoredUser()?.email || '').trim().toLowerCase()
+  const normalizedId = String(resourceId || '')
+  if (!email || !normalizedId) return getUserPoints()
+
+  try {
+    const allPoints = JSON.parse(localStorage.getItem(USER_POINTS_KEY) || '{}')
+    const profile = allPoints[email] || { total: 0, sharedResourceIds: [] }
+    const sharedResourceIds = Array.isArray(profile.sharedResourceIds) ? profile.sharedResourceIds.map(String) : []
+    if (!sharedResourceIds.includes(normalizedId)) {
+      allPoints[email] = { total: (Number(profile.total) || 0) + points, sharedResourceIds: [...sharedResourceIds, normalizedId] }
+      localStorage.setItem(USER_POINTS_KEY, JSON.stringify(allPoints))
+    }
+  } catch {
+    return getUserPoints()
+  }
+
+  return getUserPoints()
+}
 
 export function getStoredUser() {
   try {
@@ -107,6 +200,41 @@ export function getUniqueRegisteredUsers() {
     seen.add(email)
     return true
   })
+}
+
+export function getHiredChatContacts(users) {
+  const currentUser = getStoredUser()
+  const currentEmail = String(currentUser?.email || '').trim().toLowerCase()
+  if (!currentEmail || !Array.isArray(users)) return []
+
+  const usersByEmail = new Map(users.map((user) => [String(user.email || '').trim().toLowerCase(), user]))
+  const contacts = new Map()
+  const jobs = currentUser?.userType === 'teacher' ? getAllPostedJobs() : getPostedJobs()
+
+  jobs.forEach((job) => {
+    if (currentUser.userType !== 'teacher') {
+      const hiredApplicants = (job.applicants || [])
+        .filter((applicant) => String(applicant.status || '').toLowerCase() === 'hired')
+      hiredApplicants.forEach((applicant) => {
+        const email = String(applicant.email || '').trim().toLowerCase()
+        const contact = usersByEmail.get(email) || applicant
+        if (email && email !== currentEmail) contacts.set(email, contact)
+      })
+    }
+  })
+
+  if (currentUser.userType === 'teacher') {
+    getAllPostedJobs().forEach((job) => {
+      const ownerEmail = String(job.ownerEmail || '').trim().toLowerCase()
+      const hiredForTeacher = (job.applicants || []).some((applicant) =>
+        String(applicant.email || '').trim().toLowerCase() === currentEmail && String(applicant.status || '').toLowerCase() === 'hired'
+      )
+      const owner = usersByEmail.get(ownerEmail)
+      if (hiredForTeacher && ownerEmail && ownerEmail !== currentEmail && owner) contacts.set(ownerEmail, owner)
+    })
+  }
+
+  return [...contacts.values()]
 }
 
 export async function syncRegisteredUsers() {

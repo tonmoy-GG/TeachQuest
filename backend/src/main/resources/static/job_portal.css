@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap'); 
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Quantico';
+}
+
+body {
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+header {
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Teach Quest on the right */
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo-icon {
+    width: 50px; /* Adjusted logo size */
+    height: auto;
+    margin-right: 15px;
+}
+
+h1 {
+    font-size: 24px;
+    color: black;
+}
+
+.teach-quest {
+    font-size: 22px;
+    font-weight: bold;
+    color: black;
+}
+
+.filters {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    justify-content: space-between;
+    padding-bottom: 10px;
+}
+
+.filter-input, .filter-select {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    flex: 1;
+    text-align: center;
+    font-size: 16px;
+}
+
+.separator {
+    width: 100%;
+    height: 2px;
+    background-color: #ddd;
+    margin-top: 5px;
+}
+
+main {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 20px;
+    max-width: 90%;
+    margin: 20px auto;
+}
+
+.job-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.job-card h2 {
+    font-size: 18px;
+    color: #007bff;
+}
+
+.posted-time {
+    font-size: 14px;  /* Increased from 12px to 14px */
+    color: #555;      /* Slightly darker for better readability */
+    font-weight: bold; /* Makes it stand out a bit more */
+    margin-top: 8px;   /* Adds space between text and "Read More" link */
+}
+
+.apply-btn {
+    background-color:  aqua;
+    color: black;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.apply-btn:hover {
+    background-color: #3B8EA5;
+}
+
+@media (max-width: 900px) {
+    main { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+    main { grid-template-columns: repeat(1, 1fr); }
+}

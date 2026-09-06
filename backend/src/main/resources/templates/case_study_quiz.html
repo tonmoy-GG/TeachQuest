@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Study - TeachQuest</title>
+    <link rel="stylesheet" th:href="@{/quiz_premium.css}">
+    <style>
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .scenario-box {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent-purple);
+            height: fit-content;
+        }
+
+        @media (max-width: 768px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page-header" style="max-width: 1000px; margin: 20px auto; padding: 0 20px;">
+        <div class="logo">TeachQuest</div>
+        <div class="timer-badge"><span>⏳</span> 15:00</div>
+    </div>
+
+    <div class="quiz-container" style="max-width: 1100px;"> <!-- Wider for split view -->
+        <div class="card">
+
+            <h2 style="margin-bottom: 30px;">Case Study: Database Optimization</h2>
+
+            <div class="split-layout">
+                <!-- Left: Scenario -->
+                <div class="scenario-box">
+                    <h3 style="margin-top:0;">Scenario</h3>
+                    <p style="line-height: 1.8; color: #444; margin-bottom: 20px;">
+                        A large e-commerce platform 'ShopFast' is experiencing slow load times during peak hours.
+                        The engineering team has identified that the 'Product Search' query is the bottleneck.
+                        The database currently stores 10 million products.
+                        Users frequently search by 'Category' and sort by 'Price'.
+                    </p>
+                    <p style="line-height: 1.8; color: #444;">
+                        The current query is:
+                        <code>SELECT * FROM products WHERE category = ? ORDER BY price ASC</code>.
+                        However, there are no composite indexes, only a single index on 'id'.
+                    </p>
+
+                    <button class="btn btn-secondary" style="margin-top: 20px; font-size: 0.9rem;">
+                        💡 View Hint (+30s penalty)
+                    </button>
+                </div>
+
+                <!-- Right: Question -->
+                <div>
+                    <div class="question-text" style="margin-top: 0;">
+                        Based on the scenario, which indexing strategy would yield the best performance improvement for
+                        the search query?
+                    </div>
+
+                    <div class="options-grid">
+                        <div class="option-card" onclick="selectOption(this)">
+                            <div class="option-marker">A</div>
+                            <div>Create separate indexes on 'category' and 'price'.</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this)">
+                            <div class="option-marker">B</div>
+                            <div>Create a composite index on (category, price).</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this)">
+                            <div class="option-marker">C</div>
+                            <div>Create a composite index on (price, category).</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this)">
+                            <div class="option-marker">D</div>
+                            <div>Cache all results in Redis without DB changes.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; display: flex; justify-content: flex-end;">
+                <button class="btn btn-primary" onclick="window.location.href='/quiz-result-ai'">Submit Case Study
+                    ➜</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function selectOption(element) {
+            document.querySelectorAll('.option-card').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+    </script>
+
+</body>
+
+</html>

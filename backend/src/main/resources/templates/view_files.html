@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Resources - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <style>
+        .page-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .category-badge {
+            background: #AFCCF1;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: #555;
+            font-weight: bold;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-link:hover {
+            color: #000;
+        }
+
+        #resource-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        .resource-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border: 1px solid #eee;
+            transition: 0.2s;
+        }
+
+        .resource-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            border-color: #AFCCF1;
+        }
+
+        .resource-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: auto;
+        }
+
+        .resource-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .resource-meta {
+            font-size: 0.9em;
+            color: #666;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .download-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #000;
+            color: #fff;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        .download-btn:hover {
+            background: #333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .empty-icon {
+            width: 100px;
+            opacity: 0.1;
+            margin-bottom: 20px;
+        }
+
+        .empty-text {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #999;
+        }
+    </style>
+    <script>
+        async function fetchFiles() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const course = urlParams.get('course');
+            const type = urlParams.get('type');
+            document.getElementById('course-id').textContent = course;
+            document.getElementById('category-name').textContent = type;
+
+            try {
+                const response = await fetch(`/api/resources/filter?courseCode=${course}&category=${type}`);
+                if (response.ok) {
+                    const files = await response.json();
+                    renderFiles(files);
+                }
+            } catch (error) { console.error("Error:", error); }
+        }
+
+        function renderFiles(files) {
+            const container = document.getElementById('resource-list');
+            const empty = document.getElementById('empty-container');
+            container.innerHTML = '';
+
+            if (files.length === 0) {
+                container.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+            empty.style.display = 'none';
+            container.style.display = 'grid';
+
+            files.forEach(file => {
+                const card = document.createElement('div');
+                card.className = 'resource-card';
+                const isTrulyExternal = file.filePath.startsWith('http');
+                const isVideo = file.fileType === 'url/link' || file.filePath.match(/\.(mp4|mkv|webm|avi)$/i);
+                const resourceLink = isTrulyExternal ? file.filePath : `/${file.filePath}`;
+                const btnText = isVideo ? (isTrulyExternal ? 'WATCH EXTERNAL' : 'PLAY VIDEO') : 'DOWNLOAD';
+                const fileIcon = isVideo ? '/video.png' : '/attachment.png';
+
+                card.innerHTML = `
+                    <div class="resource-header">
+                        <img src="${fileIcon}" alt="file" class="file-icon" onerror="this.src='/attachment.png'">
+                        <span class="resource-title" title="${file.description || 'Unnamed'}">${file.description || 'Unnamed'}</span>
+                    </div>
+                    <div class="resource-meta">
+                        <span>Course: <b>${file.courseCode}</b></span>
+                        <span>Uploader ID: <b>${file.uploaderId}</b></span>
+                        <span style="color: ${isTrulyExternal ? '#52A7F8' : '#28a745'};"><b>${isTrulyExternal ? 'External Link' : 'Local Resource'}</b></span>
+                    </div>
+                    <a href="${resourceLink}" target="_blank" class="download-btn">${btnText}</a>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchFiles();
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                document.getElementById('welcome-user').textContent = "Hi, " + (user.name || user.username || "User") + "!!";
+                const dashLink = document.getElementById('dash-link');
+                dashLink.href = user.userType === 'teacher' ? '/teacher-dashboard' : '/student-dashboard';
+            }
+        });
+        function logout() { sessionStorage.removeItem('user'); window.location.href = '/'; }
+    </script>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div class="welcome-text" id="welcome-user">Hi!!</div>
+            <div class="avatar-circle"><img src="https://i.pravatar.cc/150?u=user" alt="Avatar"></div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-buttons">
+            <a id="dash-link" href="#" class="nav-btn">Dashboard</a>
+            <a th:href="@{/job-board}" class="nav-btn">Job Board</a>
+            <a th:href="@{/study-resources}" class="nav-btn active">Study Resources</a>
+            <a th:href="@{/upload-resource}" class="nav-btn">Upload Resources</a>
+            <a th:href="@{/question-bank}" class="nav-btn" style="background-color: #D4F8E6;">Question Bank</a>
+        </div>
+    </div>
+
+    <main>
+        <div class="page-info">
+            <a th:href="@{/study-resources}" class="back-link">← Back to Courses</a>
+            <div class="category-badge"><span id="course-id">...</span> - <span id="category-name">...</span></div>
+            <div style="width:140px;"></div>
+        </div>
+
+        <div id="resource-list"></div>
+
+        <div id="empty-container" class="empty-state" style="display:none;">
+            <img src="/book.png" alt="Empty" class="empty-icon">
+            <p class="empty-text">No resources found here yet.</p>
+            <a th:href="@{/upload-resource}" class="download-btn" style="width:200px; margin: 20px auto;">UPLOAD NOW</a>
+        </div>
+    </main>
+</body>
+
+</html>

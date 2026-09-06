@@ -1,0 +1,125 @@
+/* Reset styles */
+@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap'); 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Quantico';
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f9f9f9;
+    position: relative;
+}
+
+/* TeachQuest - Fixed in the top-left of the page */
+.teachquest {
+    position: fixed;
+    top: 10px;
+    left: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: black;
+}
+
+/* Container */
+.quiz-container {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 450px;
+    text-align: center;
+    position: relative;
+}
+
+/* Header */
+.quiz-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.quiz-header img {
+    width: 40px;
+}
+
+.quiz-header h1 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* Quiz List */
+.quiz-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Clickable Quiz Card */
+.quiz-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Adjusted spacing */
+    background: white;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    text-decoration: none; /* Remove underline from links */
+    color: inherit; /* Keep text color consistent */
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Hover effect */
+.quiz-card:hover {
+    transform: scale(1.02);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Quiz Card Image */
+.quiz-card img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+/* Quiz Info (Middle Section) */
+.quiz-info {
+    text-align: left;
+    flex: 1;
+    margin-left: 10px;
+}
+
+.quiz-info h3 {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.quiz-info .subject {
+    font-size: 14px;
+    color: gray;
+}
+
+/* Quiz Details (Right Section) */
+.quiz-details {
+    text-align: right;
+}
+
+.quiz-details .topic {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.quiz-details p {
+    font-size: 14px;
+    margin-top: 5px;
+}

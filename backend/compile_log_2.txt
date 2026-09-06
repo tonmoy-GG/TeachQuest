@@ -1,0 +1,22 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------------< com.teachquest:backend >-----------------------
+[INFO] Building backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.2.0:resources (default-resources) @ backend ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] Copying 1 resource
+[INFO] Copying 40 resources
+[INFO] 
+[INFO] --- compiler:3.10.1:compile (default-compile) @ backend ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 29 source files to C:\xampp\htdocs\TeachQuest\backend\target\classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  5.791 s
+[INFO] Finished at: 2026-01-17T18:46:13+06:00
+[INFO] ------------------------------------------------------------------------

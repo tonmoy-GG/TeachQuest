@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <style>
+        /* Dashboard specific overrides */
+        .content-section {
+            padding: 0 40px;
+            margin-bottom: 40px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-weight: bold;
+        }
+
+        th {
+            background-color: var(--table-header);
+            padding: 15px 20px;
+            text-align: left;
+            color: black;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            border-bottom: 2px solid white;
+        }
+
+        td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stars {
+            color: #FFD700;
+            font-size: 1.2em;
+        }
+
+        .status-due {
+            color: #ff4d4d;
+        }
+
+        .status-paid {
+            color: #28a745;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                // Update header name
+                const nameSpan = document.querySelector('.welcome-text');
+                const name = user.username || user.universityId || "Student";
+                nameSpan.innerHTML = `Hi, ${name}!!`;
+            }
+        });
+
+        function logout() {
+            sessionStorage.removeItem('user');
+            window.location.href = '/';
+        }
+    </script>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div class="welcome-text">Hi, Student!!</div>
+            <div class="avatar-circle">
+                <img src="https://via.placeholder.com/40" alt="Avatar">
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-buttons">
+            <!-- Dynamic Nav -->
+        </div>
+    </div>
+
+    <!-- Active Hires Section (Jobs where this student posted and someone is hired) -->
+    <div class="content-section">
+        <h2>My Hired Tutors</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tutor Name</th>
+                        <th>Subject</th>
+                        <th>Salary</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="hired-tutors-body">
+                    <tr>
+                        <td colspan="5" style="text-align:center;">Loading your tutors...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Job Posts Section (Jobs this student has posted) -->
+    <div class="content-section">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>My Recent Job Posts</h2>
+            <a href="/view-applicants" style="color:var(--primary-blue); font-weight:bold; text-decoration:none;">Manage
+                All →</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Salary</th>
+                        <th>Applicants</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-posts-body">
+                    <tr>
+                        <td colspan="4" style="text-align:center;">Checking your posts...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function renderNav(user) {
+            const navButtons = document.querySelector('.nav-buttons');
+            if (!navButtons) return;
+
+            let html = '';
+            const isTeacher = user.userType === 'teacher';
+            const dashLink = isTeacher ? '/teacher-dashboard' : '/student-dashboard';
+
+            html += `<a id="dash-link" href="${dashLink}" class="nav-btn active">Dashboard</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/job-board" class="nav-btn">Job Board</a>`;
+                html += `<a href="/view-applied-jobs" class="nav-btn">My Applications</a>`;
+            } else {
+                html += `<a href="/view-applicants" class="nav-btn">My Posted Jobs</a>`;
+                html += `<a href="/job-portal" class="nav-btn">Post a New Job</a>`;
+                html += `<a href="/quiz-hub" class="nav-btn">Quiz Hub</a>`;
+            }
+
+            html += `<a href="/study-resources" class="nav-btn">Study Resources</a>`;
+            html += `<a href="/upload-resource" class="nav-btn">Upload Resources</a>`;
+            html += `<a href="/chat" class="nav-btn">Chat</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/question-bank" class="nav-btn" style="background-color: #D4F8E6;">Question Bank</a>`;
+            }
+            navButtons.innerHTML = html;
+        }
+
+        async function fetchMyRecentPosts(userId) {
+            try {
+                const response = await fetch(`/api/jobs/my-jobs/${userId}`);
+                if (response.ok) {
+                    const jobs = await response.json();
+                    const body = document.getElementById('recent-posts-body');
+                    body.innerHTML = '';
+
+                    const recent = jobs.slice(-3).reverse();
+                    if (recent.length === 0) {
+                        body.innerHTML = '<tr><td colspan="4" style="text-align:center;">You haven\'t posted any jobs yet.</td></tr>';
+                        return;
+                    }
+
+                    for (const job of recent) {
+                        // Fetch applicant count
+                        const appRes = await fetch(`/api/applications/job/${job.id}`);
+                        const apps = await appRes.json();
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${job.subject}</td>
+                            <td>${job.salary}</td>
+                            <td style="color:var(--primary-blue); font-weight:bold;">${apps.length} Applicant(s)</td>
+                            <td><a href="/manage-applicants?jobId=${job.id}" class="nav-btn" style="padding:5px 10px; font-size:0.8em; background:#D4F8E6;">Manage</a></td>
+                        `;
+                        body.appendChild(tr);
+                    }
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function fetchHiredTutors(userId) {
+            try {
+                // Fetch student's jobs and check if any have a hiredTutorId
+                const response = await fetch(`/api/jobs/my-jobs/${userId}`);
+                if (response.ok) {
+                    const jobs = await response.json();
+                    const body = document.getElementById('hired-tutors-body');
+                    body.innerHTML = '';
+
+                    const hiredJobs = jobs.filter(j => j.hiredTutorId);
+
+                    if (hiredJobs.length === 0) {
+                        body.innerHTML = '<tr><td colspan="5" style="text-align:center;">No tutors hired yet.</td></tr>';
+                        return;
+                    }
+
+                    for (const job of hiredJobs) {
+                        const tutorRes = await fetch(`/api/users/${job.hiredTutorId}`);
+                        const tutor = await tutorRes.json();
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${tutor.name || tutor.username}</td>
+                            <td>${job.subject}</td>
+                            <td>${job.salary}</td>
+                            <td><span style="color:#28a745; font-weight:bold;">ACTIVE</span></td>
+                            <td><a href="/chat?targetUserId=${tutor.id}" class="nav-btn" style="padding:5px 10px; font-size:0.8em; background:#AFCCF1;">Chat</a></td>
+                        `;
+                        body.appendChild(tr);
+                    }
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                const nameSpan = document.querySelector('.welcome-text');
+                nameSpan.innerHTML = `Hi, ${user.name || user.username || "Student"}!!`;
+                renderNav(user);
+                fetchMyRecentPosts(user.id);
+                fetchHiredTutors(user.id);
+            } else {
+                window.location.href = '/login';
+            }
+        });
+
+        function logout() { sessionStorage.removeItem('user'); window.location.href = '/'; }
+    </script>
+</body>
+
+</html>

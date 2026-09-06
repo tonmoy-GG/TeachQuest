@@ -1,0 +1,11 @@
+Field	Type	Null	Key	Default	Extra
+id	int(11)	NO	PRI	NULL	auto_increment
+department	varchar(255)	YES		NULL	
+category	varchar(50)	YES		NULL	
+semester	varchar(50)	YES		NULL	
+course_code	varchar(50)	YES		NULL	
+description	text	YES		NULL	
+file_path	varchar(255)	YES		NULL	
+uploaded_at	timestamp	NO		current_timestamp()	
+file_type	varchar(255)	NO		NULL	
+uploader_id	int(11)	NO	MUL	NULL	

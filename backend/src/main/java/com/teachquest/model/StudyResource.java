@@ -1,0 +1,167 @@
+package com.teachquest.model;
+
+import javax.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "uploadresources")
+public class StudyResource {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String department;
+
+    @Column(nullable = false, length = 100)
+    private String category;
+
+    @Column(nullable = false, length = 50)
+    private String semester;
+
+    @Column(name = "course_code", nullable = false, length = 50)
+    private String courseCode;
+
+    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "file_path", nullable = false, length = 512)
+    private String filePath;
+
+    @Column(name = "file_type", nullable = false)
+    private String fileType;
+
+    @Column(name = "is_external", nullable = false)
+    private boolean isExternal = false;
+
+    @Column(name = "uploader_id", nullable = false)
+    private Long uploaderId;
+
+    @Column(name = "upvote_points", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    private int upvotePoints = 0;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
+    private boolean verified = false;
+
+    @Column(name = "verified_bonus_awarded", nullable = false, columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
+    private boolean verifiedBonusAwarded = false;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "moderation_status", nullable = false, length = 20)
+    private String moderationStatus = "ACTIVE";
+
+    public StudyResource() {
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getSemester() {
+        return semester;
+    }
+
+    public void setSemester(String semester) {
+        this.semester = semester;
+    }
+
+    public String getCourseCode() {
+        return courseCode;
+    }
+
+    public void setCourseCode(String courseCode) {
+        this.courseCode = courseCode;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public String getFileType() {
+        return fileType;
+    }
+
+    public void setFileType(String fileType) {
+        this.fileType = fileType;
+    }
+
+    public boolean isExternal() {
+        return isExternal;
+    }
+
+    public void setExternal(boolean external) {
+        isExternal = external;
+    }
+
+    public Long getUploaderId() {
+        return uploaderId;
+    }
+
+    public void setUploaderId(Long uploaderId) {
+        this.uploaderId = uploaderId;
+    }
+
+    public int getUpvotePoints() {
+        return upvotePoints;
+    }
+
+    public void setUpvotePoints(int upvotePoints) {
+        this.upvotePoints = upvotePoints;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+    public boolean isVerifiedBonusAwarded() {
+        return verifiedBonusAwarded;
+    }
+
+    public void setVerifiedBonusAwarded(boolean verifiedBonusAwarded) {
+        this.verifiedBonusAwarded = verifiedBonusAwarded;
+    }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public String getModerationStatus() { return moderationStatus; }
+    public void setModerationStatus(String moderationStatus) { this.moderationStatus = moderationStatus; }
+}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>My Applications - TeachQuest</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <script>
+        async function fetchMyApplications() {
+            const userStr = sessionStorage.getItem('user');
+            if (!userStr) {
+                window.location.href = '/login';
+                return;
+            }
+            const user = JSON.parse(userStr);
+
+            try {
+                const response = await fetch(`/api/applications/my-applications/${user.id}`);
+                if (response.ok) {
+                    const apps = await response.json();
+                    const list = document.getElementById('apps-list');
+                    list.innerHTML = '';
+
+                    if (apps.length === 0) {
+                        list.innerHTML = '<p>You haven\'t applied to any jobs yet.</p>';
+                        return;
+                    }
+
+                    // The endpoint returns JobPost objects (List<JobPost>).
+                    // Confirmed in JobApplicationService: getApplicationsByTutor returns List<JobPost>.
+
+                    apps.forEach(job => {
+                        const item = document.createElement('div');
+                        item.className = 'card';
+
+                        let status = "Applied";
+                        if (job.hiredTutorId) {
+                            status = (job.hiredTutorId == user.id) ? "Hired!" : "Position Filled";
+                        }
+
+                        item.innerHTML = `
+                            <h3>${job.subject}</h3>
+                            <p><strong>Class:</strong> ${job.className}</p>
+                            <p><strong>Salary:</strong> ${job.salary}</p>
+                            <p><strong>Status:</strong> ${status}</p>
+                        `;
+                        list.appendChild(item);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchMyApplications);
+    </script>
+</head>
+
+<body>
+    <button onclick="window.history.back()" class="back-btn" title="Go Back">←</button>
+    <div class="container">
+        <h1>My Applications</h1>
+        <div id="apps-list">Loading...</div>
+        <a href="/job-portal">Back to Job Portal</a>
+    </div>
+</body>
+
+</html>

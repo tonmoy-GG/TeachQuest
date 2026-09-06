@@ -18,7 +18,7 @@ public class AuthController {
     public ResponseEntity<?> registerUser(@RequestBody User user) {
         try {
             User registeredUser = userService.registerUser(user);
-            return ResponseEntity.ok("Account created successfully!");
+            return ResponseEntity.ok(new AuthUserResponse(registeredUser));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
@@ -43,7 +43,7 @@ public class AuthController {
             System.err.println("DEBUG AUTH: Derived Identifier: " + identifier);
 
             User loggedInUser = userService.loginUser(identifier, user.getPassword());
-            return ResponseEntity.ok(loggedInUser);
+            return ResponseEntity.ok(new AuthUserResponse(loggedInUser));
         } catch (Exception e) {
             System.err.println("DEBUG AUTH: Login Error: " + e.getMessage());
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());

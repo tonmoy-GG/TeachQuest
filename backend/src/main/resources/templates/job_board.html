@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Portal - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <style>
+        :root {
+            --primary-blue-local: #88D3EC;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            display: flex;
+            gap: 20px;
+            padding: 20px 0;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .filter-group {
+            flex: 1;
+            position: relative;
+        }
+
+        .filter-input,
+        .filter-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 1em;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            border-color: var(--primary-blue);
+        }
+
+        /* Job Grid */
+        .job-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        /* Job Card Styling */
+        .job-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .job-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .job-card h3 {
+            color: var(--primary-blue-local);
+            font-size: 1.3em;
+            margin: 0 0 15px 0;
+            font-weight: 700;
+        }
+
+        .job-details {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .job-details li {
+            margin-bottom: 8px;
+            font-size: 1em;
+            font-weight: 400;
+        }
+
+        .job-details strong {
+            display: inline-block;
+            width: 140px;
+            color: #000;
+        }
+
+        .posted-date {
+            font-size: 0.8em;
+            color: #666;
+            margin: 15px 0;
+        }
+
+        .already-applied {
+            font-size: 0.9em;
+            color: #555;
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+
+        .btn-apply {
+            background-color: var(--primary-blue-local);
+            color: black;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1.1em;
+            width: 100%;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn-apply:hover {
+            background-color: #7abccf;
+        }
+
+        .no-jobs {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            color: #888;
+        }
+    </style>
+    <script>
+        let allJobs = [];
+        let myApplications = [];
+
+        function renderNav(user) {
+            const navButtons = document.querySelector('.nav-buttons');
+            if (!navButtons) return;
+
+            let html = '';
+            const isTeacher = user.userType === 'teacher';
+            const dashLink = isTeacher ? '/teacher-dashboard' : '/student-dashboard';
+
+            html += `<a id="dash-link" href="${dashLink}" class="nav-btn">Dashboard</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/job-board" class="nav-btn active">Job Board</a>`;
+                html += `<a href="/view-applied-jobs" class="nav-btn">My Applications</a>`;
+            } else {
+                html += `<a href="/view-applicants" class="nav-btn">My Posted Jobs</a>`;
+                html += `<a href="/job-portal" class="nav-btn">Post a New Job</a>`;
+            }
+
+            html += `<a href="/study-resources" class="nav-btn">Study Resources</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/upload-resource" class="nav-btn">Upload Resources</a>`;
+                html += `<a href="/question-bank" class="nav-btn" style="background-color: #D4F8E6;">Question Bank</a>`;
+            }
+            navButtons.innerHTML = html;
+        }
+
+        async function init() {
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                document.getElementById('welcome-user').textContent = "Hi, " + (user.name || user.username || "User") + "!!";
+                renderNav(user);
+
+                if (user.userType !== 'teacher') {
+                    document.getElementById('main-content').innerHTML = `
+                        <div class="container" style="text-align:center; padding: 100px 20px;">
+                            <h2 style="font-size: 2.5em; color: #dc3545;">Access Restricted</h2>
+                            <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">
+                                The Job Board is exclusively for Tutors looking for teaching opportunities.
+                            </p>
+                            <a href="/student-dashboard" class="nav-btn" style="display:inline-block; background:var(--primary-blue-local); color:white; text-decoration:none; padding: 12px 30px; border-radius: 8px;">Back to Dashboard</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                await fetchMyApplications(user.id);
+                await fetchJobs();
+            } else {
+                window.location.href = '/login';
+            }
+        }
+
+        async function fetchMyApplications(tutorId) {
+            try {
+                const response = await fetch(`/api/applications/my-applications/${tutorId}`);
+                if (response.ok) {
+                    myApplications = await response.json();
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function fetchJobs() {
+            try {
+                const response = await fetch('/api/jobs/all');
+                if (response.ok) {
+                    allJobs = await response.json();
+                    renderJobs(allJobs);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function renderJobs(jobs) {
+            const grid = document.getElementById('job-grid');
+            grid.innerHTML = '';
+
+            if (jobs.length === 0) {
+                grid.innerHTML = '<div class="no-jobs">No teaching roles available at the moment.</div>';
+                return;
+            }
+
+            const appliedJobIds = myApplications.map(app => app.jobId);
+
+            jobs.forEach(job => {
+                const isApplied = appliedJobIds.includes(job.id);
+                const card = document.createElement('div');
+                card.className = 'job-card';
+                card.innerHTML = `
+                    <h3>Looking for help in ${job.subject}</h3>
+                    <ul class="job-details">
+                        <li><strong>Subject:</strong> ${job.subject}</li>
+                        <li><strong>Location:</strong> ${job.address}</li>
+                        <li><strong>Days per week:</strong> ${job.days}</li>
+                        <li><strong>Gender preference:</strong> ${job.tutorGender}</li>
+                        <li><strong>Salary:</strong> ${job.salary}</li>
+                        <li><strong>Requirements:</strong> ${job.requirements}</li>
+                    </ul>
+                    <div class="posted-date">Listed on TeachQuest</div>
+                    ${isApplied ?
+                        `<div class="already-applied">Already Applied</div>` :
+                        `<button class="btn-apply" onclick="applyForJob(${job.id})">Apply Now</button>`
+                    }
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function applyForJob(jobId) {
+            const userStr = sessionStorage.getItem('user');
+            if (!userStr) return;
+            const user = JSON.parse(userStr);
+
+            try {
+                const response = await fetch(`/api/applications/apply?jobId=${jobId}&tutorId=${user.id}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    alert('Applied successfully!');
+                    await fetchMyApplications(user.id);
+                    renderJobs(allJobs);
+                } else {
+                    const error = await response.text();
+                    alert(error);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function filterJobs() {
+            const subjectVal = document.getElementById('filter-subject').value.toLowerCase();
+            const addrVal = document.getElementById('filter-address').value.toLowerCase();
+            const genderVal = document.getElementById('filter-gender').value;
+
+            const filtered = allJobs.filter(job => {
+                const matchSubject = job.subject.toLowerCase().includes(subjectVal);
+                const matchAddr = job.address.toLowerCase().includes(addrVal);
+                let matchGender = true;
+                if (genderVal !== 'All') {
+                    matchGender = job.tutorGender.toLowerCase() === genderVal.toLowerCase() || job.tutorGender.toLowerCase() === 'any';
+                }
+                return matchSubject && matchAddr && matchGender;
+            });
+            renderJobs(filtered);
+        }
+
+        function logout() { sessionStorage.removeItem('user'); window.location.href = '/'; }
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div class="welcome-text" id="welcome-user">Hi!!</div>
+            <div class="avatar-circle"><img src="https://i.pravatar.cc/150?u=user" alt="Avatar"></div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-buttons">
+            <!-- Dynamic Nav -->
+        </div>
+    </div>
+
+    <main id="main-content">
+        <div class="container">
+            <h2>Available Teaching Roles</h2>
+
+            <div class="filter-section">
+                <div class="filter-group">
+                    <input type="text" id="filter-subject" class="filter-input" onkeyup="filterJobs()"
+                        placeholder="Search by Subject (e.g. Physics, Math)">
+                </div>
+                <div class="filter-group">
+                    <input type="text" id="filter-address" class="filter-input" onkeyup="filterJobs()"
+                        placeholder="Search by Location (e.g. Dhaka)">
+                </div>
+                <div class="filter-group">
+                    <select id="filter-gender" class="filter-select" onchange="filterJobs()">
+                        <option value="All">Gender Preference</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Any">Doesn't Matter</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="job-grid" class="job-grid">
+                <div class="no-jobs">Loading Available Jobs...</div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

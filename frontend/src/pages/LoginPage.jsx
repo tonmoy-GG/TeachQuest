@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { findRegisteredUser, getStoredUser, parseResponse, saveRegisteredUsers, STORAGE_KEY } from '../utils/appData'
+import { parseResponse, STORAGE_KEY } from '../utils/appData'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -20,26 +20,6 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const registeredUser = findRegisteredUser(form.email, form.password)
-
-      if (registeredUser) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          username: registeredUser.username,
-          email: registeredUser.email,
-          userType: registeredUser.userType,
-          universityId: registeredUser.universityId,
-          contactNo: registeredUser.contactNo,
-          address: registeredUser.address,
-        }))
-
-        if (registeredUser.userType === 'teacher') {
-          navigate('/teacher-dashboard')
-        } else {
-          navigate('/dashboard')
-        }
-        return
-      }
-
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,12 +36,14 @@ export default function LoginPage() {
       }
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        id: data.id,
         username: data.username || data.name || data.email?.split('@')[0],
         email: data.email,
         userType: data.userType || 'student',
         universityId: data.universityId || '',
         contactNo: data.contactNo || '',
         address: data.address || '',
+        totalPoints: data.totalPoints || 0,
       }))
 
       if ((data.userType || 'student') === 'teacher') {

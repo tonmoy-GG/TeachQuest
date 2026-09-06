@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Resources - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/upload_resources.css}">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <script>
+
+        function logout() {
+            sessionStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        let currentType = 'file';
+
+        function toggleResourceType(type) {
+            currentType = type;
+            const fileSection = document.getElementById('file-upload-section');
+            const urlSection = document.getElementById('url-upload-section');
+            const btnFile = document.getElementById('btn-file');
+            const btnUrl = document.getElementById('btn-url');
+
+            if (type === 'file') {
+                fileSection.classList.remove('hidden');
+                urlSection.classList.add('hidden');
+                btnFile.classList.add('active');
+                btnUrl.classList.remove('active');
+                document.getElementById('externalUrl').required = false;
+            } else {
+                fileSection.classList.add('hidden');
+                urlSection.classList.remove('hidden');
+                btnFile.classList.remove('active');
+                btnUrl.classList.add('active');
+                document.getElementById('externalUrl').required = true;
+            }
+        }
+
+        async function uploadToLocalChunks(file) {
+            const CHUNK_SIZE = 2000000; // 2MB chunks for maximum stability on local XAMPP
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+            const fileName = Date.now() + "_" + file.name.replace(/\s+/g, '_');
+
+            const progressContainer = document.getElementById('progress-container');
+            const progressBar = document.getElementById('progress-bar');
+            const uploadStatus = document.getElementById('upload-status');
+            progressContainer.style.display = 'block';
+
+            for (let i = 0; i < totalChunks; i++) {
+                const start = i * CHUNK_SIZE;
+                const end = Math.min(start + CHUNK_SIZE, file.size);
+                const chunk = file.slice(start, end);
+
+                const formData = new FormData();
+                formData.append("file", chunk);
+                formData.append("fileName", fileName);
+                formData.append("chunkIndex", i);
+                formData.append("totalChunks", totalChunks);
+
+                try {
+                    const response = await fetch('/api/resources/upload-chunk', {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(errText || `Server error at part ${i + 1}`);
+                    }
+
+                    const percent = Math.round(((i + 1) / totalChunks) * 100);
+                    progressBar.style.width = percent + "%";
+                    uploadStatus.textContent = `Uploading Video Parts (${i + 1}/${totalChunks}): ${percent}%`;
+
+                    // Small breathing room for the server to write to disk
+                    await new Promise(r => setTimeout(r, 50));
+
+                } catch (err) {
+                    console.error("Upload error:", err);
+                    throw new Error("Upload Interrupted: The server might be restarting or too busy. Please check if your backend is running 100% and try again.");
+                }
+            }
+
+            uploadStatus.textContent = "Merging parts... This may take a moment for 300MB.";
+            return "uploads/" + fileName;
+        }
+
+
+        async function handleUpload(event) {
+            event.preventDefault();
+
+            const userStr = sessionStorage.getItem('user');
+            if (!userStr) {
+                alert("Please login first.");
+                window.location.href = '/login';
+                return;
+            }
+            const user = JSON.parse(userStr);
+
+            const form = event.target;
+            const formData = new FormData(form);
+            formData.append('uploaderId', user.id);
+
+            // Validation logic
+            let fileToUpload = null;
+            if (currentType === 'file') {
+                const fileInput = document.getElementById('file-upload');
+                if (fileInput.files.length === 0) {
+                    alert("Please select a file to upload.");
+                    return;
+                }
+                fileToUpload = fileInput.files[0];
+            } else {
+                const urlInput = document.getElementById('externalUrl');
+                if (!urlInput.value.trim()) {
+                    alert("Please provide an external URL.");
+                    return;
+                }
+            }
+
+            try {
+                // If it's a file, we upload to Cloudinary FIRST
+                // This resolves the "taking too long" server bottleneck
+                if (fileToUpload) {
+                    try {
+                        const localPath = await uploadToLocalChunks(fileToUpload);
+                        formData.set('externalUrl', localPath); // Send the local path as the link
+                        formData.delete('file'); // Remove the heavy file from the final request
+                    } catch (uploadErr) {
+                        console.error(uploadErr);
+                        alert("Local Upload Failed: " + uploadErr);
+                        document.getElementById('progress-container').style.display = 'none';
+                        return;
+                    }
+                }
+
+                const response = await fetch('/api/resources/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert("Resource uploaded successfully via Cloud storage!");
+                    form.reset();
+                    document.getElementById('file-name').textContent = 'No file chosen';
+                    document.getElementById('progress-container').style.display = 'none';
+                    toggleResourceType('file');
+                } else {
+                    const text = await response.text();
+                    alert(text || "Error uploading resource");
+                    document.getElementById('progress-container').style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("An error occurred.");
+                document.getElementById('progress-container').style.display = 'none';
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div class="welcome-text">Hi, Teacher!!</div>
+            <div class="avatar-circle">
+                <img src="https://i.pravatar.cc/150?u=teacher" alt="Avatar">
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-buttons">
+            <!-- Dynamic Nav -->
+        </div>
+    </div>
+
+    <script>
+        function renderNav(user) {
+            const navButtons = document.querySelector('.nav-buttons');
+            if (!navButtons) return;
+
+            let html = '';
+            const isTeacher = user.userType === 'teacher';
+            const dashLink = isTeacher ? '/teacher-dashboard' : '/student-dashboard';
+
+            html += `<a id="dash-link" href="${dashLink}" class="nav-btn">Dashboard</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/job-board" class="nav-btn">Job Board</a>`;
+                html += `<a href="/view-applied-jobs" class="nav-btn">My Applications</a>`;
+            } else {
+                html += `<a href="/view-applicants" class="nav-btn">My Posted Jobs</a>`;
+                html += `<a href="/job-portal" class="nav-btn">Post a New Job</a>`;
+            }
+
+            html += `<a href="/study-resources" class="nav-btn">Study Resources</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/upload-resource" class="nav-btn active">Upload Resources</a>`;
+                html += `<a href="/question-bank" class="nav-btn" style="background-color: #D4F8E6;">Question Bank</a>`;
+            } else {
+                html += `<a href="/upload-resource" class="nav-btn active">Upload Resources</a>`;
+            }
+            navButtons.innerHTML = html;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                const nameSpan = document.querySelector('.welcome-text');
+                const name = user.name || user.username || (user.userType === 'teacher' ? "Teacher" : "Student");
+                nameSpan.innerHTML = `Hi, ${name}!!`;
+                renderNav(user);
+            } else {
+                window.location.href = '/login';
+            }
+        });
+    </script>
+
+    <main>
+        <div class="container">
+            <form onsubmit="handleUpload(event)" enctype="multipart/form-data">
+
+                <!-- Department Select -->
+                <div class="form-group">
+                    <label for="department">Select Department</label>
+                    <select id="department" name="department" required>
+                        <option value="">Select Department</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="BBA">BBA</option>
+                    </select>
+                </div>
+
+                <!-- Category Select -->
+                <div class="form-group">
+                    <label for="category">Select Category</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select Category</option>
+                        <option value="Class Recording">Class Recording</option>
+                        <option value="Class Notes">Class Notes</option>
+                        <option value="CT Questions">CT Questions</option>
+                        <option value="MID Questions">MID Questions</option>
+                        <option value="Final Questions">Final Questions</option>
+                    </select>
+                </div>
+
+                <!-- Trimester/Semester Select -->
+                <div class="form-group">
+                    <label for="semester">Select Trimester/Semester</label>
+                    <select id="semester" name="semester" required>
+                        <option value="">Select Trimester</option>
+                        <option value="1">Trimester 1</option>
+                        <option value="2">Trimester 2</option>
+                        <option value="3">Trimester 3</option>
+                        <option value="4">Trimester 4</option>
+                        <option value="5">Trimester 5</option>
+                        <option value="6">Trimester 6</option>
+                        <option value="7">Trimester 7</option>
+                        <option value="8">Trimester 8</option>
+                        <option value="9">Trimester 9</option>
+                        <option value="10">Trimester 10</option>
+                        <option value="11">Trimester 11</option>
+                        <option value="12">Trimester 12</option>
+                    </select>
+                </div>
+
+                <!-- Course Code Select -->
+                <div class="form-group">
+                    <label for="courseCode">Course Code</label>
+                    <select id="courseCode" name="courseCode" required>
+                        <option value="">Select Course Code</option>
+                        <option value="CSE110">CSE110</option>
+                        <option value="CSE111">CSE111</option>
+                        <option value="CSE2233">CSE2233</option>
+                        <option value="CSE2215">CSE2215</option>
+                        <option value="CSE3411">CSE3411</option>
+                        <option value="CSE3811">CSE3811</option>
+                        <option value="CSE4325">CSE4325</option>
+                        <option value="CSE3711">CSE3711</option>
+                        <option value="MATH2183">MATH2183</option>
+                        <option value="MATH1151">MATH1151</option>
+                    </select>
+                </div>
+
+                <!-- Description Textarea -->
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" required></textarea>
+                </div>
+
+                <!-- Resource Type Selector -->
+                <div class="resource-type-selector">
+                    <button type="button" class="type-btn active" id="btn-file"
+                        onclick="toggleResourceType('file')">Upload File</button>
+                    <button type="button" class="type-btn" id="btn-url" onclick="toggleResourceType('url')">External
+                        Link (Videos)</button>
+                </div>
+
+                <!-- File Upload Area -->
+                <div class="upload-area" id="file-upload-section">
+                    <div class="drop-zone" id="drop-zone">
+                        <img th:src="@{/upload.png}" alt="Upload Icon">
+                        <p>Drag to Upload</p>
+                        <p>or</p>
+                        <button type="button" class="browse-button" id="browse-button">Browse</button>
+                        <input type="file" name="file" id="file-upload" style="display: none;">
+                        <!-- Display selected file name here -->
+                        <p id="file-name">No file chosen</p>
+                    </div>
+                </div>
+
+                <!-- External URL Area -->
+                <div class="url-input-group hidden" id="url-upload-section">
+                    <label for="externalUrl">External Resource URL (e.g. YouTube, Drive)</label>
+                    <input type="url" id="externalUrl" name="externalUrl" placeholder="https://youtube.com/...">
+                </div>
+
+                <!-- Progress Section -->
+                <div class="progress-container" id="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                    <div class="upload-status" id="upload-status">Starting cloud upload...</div>
+                </div>
+
+                <!-- Upload Button -->
+                <div class="upload-button-container">
+                    <button type="submit" class="upload-button">Upload</button>
+                </div>
+
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // Trigger the file input click event when the browse button is clicked
+        const fileInput = document.getElementById('file-upload');
+        const fileNameDisplay = document.getElementById('file-name');
+
+        document.getElementById('browse-button').addEventListener('click', function () {
+            fileInput.click();
+        });
+
+        // Allow drag-and-drop functionality
+        const dropZone = document.getElementById('drop-zone');
+
+        dropZone.addEventListener('dragover', function (event) {
+            event.preventDefault();
+            dropZone.style.backgroundColor = "#f0f0f0";
+        });
+
+        dropZone.addEventListener('dragleave', function (event) {
+            dropZone.style.backgroundColor = "";
+        });
+
+        dropZone.addEventListener('drop', function (event) {
+            event.preventDefault();
+            dropZone.style.backgroundColor = "";
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files; // Assign the dropped file to the input
+                fileNameDisplay.textContent = files[0].name; // Display the filename
+            }
+        });
+
+        // Display filename and check size when file is selected via browse button
+        fileInput.addEventListener('change', function () {
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                fileNameDisplay.textContent = file.name;
+
+                // If file is a video and > 15MB
+                if (file.type.startsWith('video/') && file.size > 15 * 1024 * 1024) {
+                    const confirmLink = confirm("This video is quite large (" + (file.size / (1024 * 1024)).toFixed(1) + "MB). \nStoring large videos in the system is not recommended.\nWould you like to switch to 'External Link' instead?");
+                    if (confirmLink) {
+                        toggleResourceType('url');
+                        fileInput.value = '';
+                        fileNameDisplay.textContent = 'No file chosen';
+                    }
+                }
+            } else {
+                fileNameDisplay.textContent = 'No file chosen';
+            }
+        });
+    </script>
+</body>
+
+</html>

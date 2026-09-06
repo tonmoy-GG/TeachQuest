@@ -1,0 +1,42 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------------< com.teachquest:backend >-----------------------
+[INFO] Building backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.2.0:resources (default-resources) @ backend ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] Copying 1 resource
+[INFO] Copying 40 resources
+[INFO] 
+[INFO] --- compiler:3.10.1:compile (default-compile) @ backend ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 29 source files to C:\xampp\htdocs\TeachQuest\backend\target\classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/xampp/htdocs/TeachQuest/backend/src/main/java/com/teachquest/repository/StudyResourceRepository.java:[15,6] cannot find symbol
+  symbol:   class Query
+  location: interface com.teachquest.repository.StudyResourceRepository
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  5.111 s
+[INFO] Finished at: 2026-01-17T18:45:45+06:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project backend: Compilation failure
+[ERROR] /C:/xampp/htdocs/TeachQuest/backend/src/main/java/com/teachquest/repository/StudyResourceRepository.java:[15,6] cannot find symbol
+[ERROR]   symbol:   class Query
+[ERROR]   location: interface com.teachquest.repository.StudyResourceRepository
+[ERROR] 
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

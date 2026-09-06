@@ -1,0 +1,96 @@
+/* General Styles */
+@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap'); 
+body {
+  font-family: 'Quantico';
+  background-color: #ececec;
+  margin: 0;
+  padding: 0;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  position: relative;
+}
+
+/* Teach Quest Title (Top Left) */
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  position: absolute;
+  left: 20px;
+  top: 10px;
+}
+
+/* Post a Job Icon (Centered) */
+.icon {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.icon img {
+  width: 40px;
+  margin-right: 10px;
+}
+
+/* Form Container */
+.form-container {
+  background: #d9d6d6;
+  width: 50%;
+  margin: 50px auto;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Form Fields */
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+input, textarea {
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+textarea {
+  resize: none;
+  height: 60px;
+}
+
+/* Radio Group */
+.radio-group {
+  margin-top: 10px;
+}
+
+/* Post Job Button */
+button {
+  background: #b2f5cb;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+button:hover {
+  background: #a3e0bd;
+}

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Posted Jobs - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <style>
+        :root {
+            --primary-blue-local: #007bff;
+            --edit-yellow: #ffc107;
+            --delete-red: #dc3545;
+        }
+
+        .top-actions {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-post {
+            background-color: var(--primary-blue-local);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 1em;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .btn-post:hover {
+            transform: translateY(-2px);
+            background-color: #0069d9;
+        }
+
+        .jobs-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 25px;
+        }
+
+        .job-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s;
+        }
+
+        .job-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .job-card h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.4em;
+            color: #222;
+            border-left: none;
+            padding-left: 0;
+        }
+
+        .job-detail {
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            color: #444;
+        }
+
+        .job-detail strong {
+            color: #000;
+            display: inline-block;
+            width: 150px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .btn-action {
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 0.9em;
+            font-family: inherit;
+            flex: 1;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-view {
+            background-color: var(--primary-blue-local);
+        }
+
+        .btn-edit {
+            background-color: var(--edit-yellow);
+            color: black;
+        }
+
+        .btn-delete {
+            background-color: var(--delete-red);
+        }
+
+        .no-jobs {
+            text-align: center;
+            font-size: 1.2em;
+            color: #666;
+            grid-column: 1 / -1;
+            padding: 60px;
+            background: #fdfdfd;
+            border-radius: 12px;
+        }
+    </style>
+    <script>
+        let userId = null;
+
+        function renderNav(user) {
+            const navButtons = document.querySelector('.nav-buttons');
+            if (!navButtons) return;
+
+            let html = '';
+            const isTeacher = user.userType === 'teacher';
+            const dashLink = isTeacher ? '/teacher-dashboard' : '/student-dashboard';
+
+            html += `<a id="dash-link" href="${dashLink}" class="nav-btn">Dashboard</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/job-board" class="nav-btn">Job Board</a>`;
+                html += `<a href="/view-applied-jobs" class="nav-btn">My Applications</a>`;
+            } else {
+                html += `<a href="/view-applicants" class="nav-btn active">My Posted Jobs</a>`;
+                html += `<a href="/job-portal" class="nav-btn">Post a New Job</a>`;
+            }
+
+            html += `<a href="/study-resources" class="nav-btn">Study Resources</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/upload-resource" class="nav-btn">Upload Resources</a>`;
+                html += `<a href="/question-bank" class="nav-btn" style="background-color: #D4F8E6;">Question Bank</a>`;
+            }
+            navButtons.innerHTML = html;
+        }
+
+        async function init() {
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                userId = user.id;
+                document.getElementById('welcome-user').textContent = "Hi, " + (user.name || user.username || "User") + "!!";
+                renderNav(user);
+
+                if (user.userType !== 'student') {
+                    document.getElementById('main-content').innerHTML = `
+                        <div class="container" style="text-align:center; padding: 100px 20px;">
+                            <h2 style="font-size: 2.5em; color: #dc3545;">Access Restricted</h2>
+                            <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">This page is for Students/Job Posters.</p>
+                            <a href="/teacher-dashboard" class="nav-btn" style="display:inline-block; background:var(--primary-blue-local); color:white; text-decoration:none; padding: 12px 30px; border-radius: 8px;">Back to Dashboard</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                await fetchMyJobs();
+            } else {
+                window.location.href = '/login';
+            }
+        }
+
+        async function fetchMyJobs() {
+            try {
+                const response = await fetch(`/api/jobs/my-jobs/${userId}`);
+                if (response.ok) {
+                    const jobs = await response.json();
+                    renderJobs(jobs);
+                }
+            } catch (error) {
+                console.error("Error fetching jobs:", error);
+            }
+        }
+
+        function renderJobs(jobs) {
+            const container = document.getElementById('jobs-container');
+            container.innerHTML = '';
+
+            if (jobs.length === 0) {
+                container.innerHTML = '<div class="no-jobs">You haven\'t posted any jobs yet.</div>';
+                return;
+            }
+
+            jobs.forEach(job => {
+                const card = document.createElement('div');
+                card.className = 'job-card';
+                card.innerHTML = `
+                    <h2>${job.title}</h2>
+                    <div class="job-detail"><strong>Subject:</strong> ${job.subject}</div>
+                    <div class="job-detail"><strong>Days per Week:</strong> ${job.days}</div>
+                    <div class="job-detail"><strong>Expected Salary:</strong> ${job.salary}</div>
+                    <div class="job-detail"><strong>Student Gender:</strong> ${job.studentGender || 'N/A'}</div>
+                    <div class="job-detail"><strong>Tutor Gender:</strong> ${job.tutorGender}</div>
+                    <div class="job-detail"><strong>Location:</strong> ${job.address}</div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn-action btn-view" onclick="viewApplicants(${job.id})">Applicants</button>
+                        <button class="btn-action btn-edit" onclick="editJob(${job.id})">Edit</button>
+                        <button class="btn-action btn-delete" onclick="deleteJob(${job.id})">Delete</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function viewApplicants(jobId) { window.location.href = `/manage-applicants?jobId=${jobId}`; }
+
+        async function deleteJob(jobId) {
+            if (!confirm("Are you sure you want to delete this job post?")) return;
+            try {
+                const response = await fetch(`/api/jobs/delete/${jobId}`, { method: 'DELETE' });
+                if (response.ok) { alert("Job deleted successfully"); fetchMyJobs(); }
+            } catch (error) { console.error("Error deleting job:", error); }
+        }
+
+        function editJob(jobId) { alert("Edit functionality coming soon for Job ID: " + jobId); }
+        function logout() { sessionStorage.removeItem('user'); window.location.href = '/'; }
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div class="welcome-text" id="welcome-user">Hi!!</div>
+            <div class="avatar-circle"><img src="https://i.pravatar.cc/150?u=user" alt="Avatar"></div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-buttons">
+            <a id="dash-link" href="#" class="nav-btn">Dashboard</a>
+            <a th:href="@{/view-applicants}" class="nav-btn active">My Posted Jobs</a>
+            <a th:href="@{/job-portal}" class="nav-btn">Post a New Job</a>
+            <a th:href="@{/study-resources}" class="nav-btn">Study Resources</a>
+        </div>
+    </div>
+
+    <main>
+        <div class="container">
+            <h2>Your Posted Job Opportunities</h2>
+
+            <div class="top-actions">
+                <a href="/job-portal" class="btn-post">+ Post a New Job</a>
+            </div>
+
+            <div id="jobs-container" class="jobs-container">
+                <p style="padding: 20px;">Loading your jobs...</p>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

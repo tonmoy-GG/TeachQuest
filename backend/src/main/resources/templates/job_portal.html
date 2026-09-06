@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post a Job - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <style>
+        :root {
+            --form-bg: #fdfdfd;
+            --input-border: #ccd0d5;
+            --btn-green: #007bff;
+            --primary-blue-local: #007bff;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-card {
+            background-color: var(--form-bg);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+        }
+
+        .form-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            width: 200px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-control {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 1.05em;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-blue-local);
+            box-shadow: 0 0 0 3px rgba(136, 211, 236, 0.2);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .radio-group-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .radio-group-container label.main-label {
+            width: 200px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .radio-options {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.05em;
+            cursor: pointer;
+        }
+
+        .submit-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 40px;
+            border-top: 1px solid #eee;
+            padding-top: 30px;
+        }
+
+        .btn-submit {
+            background-color: var(--btn-green);
+            color: white;
+            border: 2px solid #000;
+            padding: 15px 60px;
+            font-size: 1.4em;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        .btn-submit:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #000;
+        }
+    </style>
+    <script>
+        function renderNav(user) {
+            const navButtons = document.querySelector('.nav-buttons');
+            if (!navButtons) return;
+
+            let html = '';
+            const isTeacher = user.userType === 'teacher';
+            const dashLink = isTeacher ? '/teacher-dashboard' : '/student-dashboard';
+
+            html += `<a id="dash-link" href="${dashLink}" class="nav-btn">Dashboard</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/job-board" class="nav-btn">Job Board</a>`;
+                html += `<a href="/view-applied-jobs" class="nav-btn">My Applications</a>`;
+            } else {
+                html += `<a href="/view-applicants" class="nav-btn">My Posted Jobs</a>`;
+                html += `<a href="/job-portal" class="nav-btn active">Post a New Job</a>`;
+            }
+
+            html += `<a href="/study-resources" class="nav-btn">Study Resources</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/upload-resource" class="nav-btn">Upload Resources</a>`;
+                html += `<a href="/question-bank" class="nav-btn" style="background-color: #D4F8E6;">Question Bank</a>`;
+            }
+            navButtons.innerHTML = html;
+        }
+
+        async function init() {
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                document.getElementById('welcome-user').textContent = "Hi, " + (user.name || user.username || "User") + "!!";
+                renderNav(user);
+
+                if (user.userType !== 'student') {
+                    document.getElementById('main-content').innerHTML = `
+                        <div class="container" style="text-align:center; padding: 100px 20px;">
+                            <h2 style="font-size: 2.5em; color: #dc3545;">Access Restricted</h2>
+                            <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">Only students seeking tutors can post jobs here.</p>
+                            <a href="/teacher-dashboard" class="nav-btn" style="display:inline-block; background:var(--primary-blue-local); color:white; text-decoration:none; padding: 12px 30px; border-radius: 8px;">Back to Dashboard</a>
+                        </div>
+                    `;
+                    return;
+                }
+            } else {
+                window.location.href = '/login';
+            }
+        }
+
+        async function handlePostJob(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const rawData = Object.fromEntries(formData.entries());
+
+            const userStr = sessionStorage.getItem('user');
+            if (!userStr) return;
+            const user = JSON.parse(userStr);
+
+            const jobData = {
+                title: rawData.jobTitle,
+                subject: rawData.subject,
+                days: parseInt(rawData.daysPerWeek) || 0,
+                requirements: rawData.requirements,
+                address: rawData.address,
+                salary: rawData.expectedSalary,
+                studentGender: rawData.studentGender,
+                tutorGender: rawData.genderPreference,
+                userId: user.id
+            };
+
+            try {
+                const response = await fetch('/api/jobs/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(jobData)
+                });
+
+                if (response.ok) {
+                    alert('Job posted successfully! Redirecting to Manage Jobs...');
+                    window.location.href = '/view-applicants';
+                } else {
+                    const error = await response.text();
+                    alert('Failed to post job: ' + error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred. Check console.');
+            }
+        }
+
+        function logout() { sessionStorage.removeItem('user'); window.location.href = '/'; }
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div class="welcome-text" id="welcome-user">Hi!!</div>
+            <div class="avatar-circle"><img src="https://i.pravatar.cc/150?u=user" alt="Avatar"></div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-buttons">
+            <!-- Dynamic Nav -->
+        </div>
+    </div>
+
+    <main id="main-content">
+        <div class="container">
+            <h2>Post a Teaching Opportunity</h2>
+
+            <div class="form-container">
+                <div class="form-card">
+                    <form onsubmit="handlePostJob(event)">
+                        <div class="form-group">
+                            <label for="jobTitle">Job Title</label>
+                            <input type="text" id="jobTitle" name="jobTitle" class="form-control"
+                                placeholder="e.g. Need Math Tutor for Grade 10" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+                            <input type="text" id="subject" name="subject" class="form-control"
+                                placeholder="e.g. Mathematics" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="daysPerWeek">Days per Week</label>
+                            <input type="number" id="daysPerWeek" name="daysPerWeek" class="form-control"
+                                placeholder="e.g. 3" min="1" max="7" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="requirements">Requirements</label>
+                            <input type="text" id="requirements" name="requirements" class="form-control"
+                                placeholder="e.g. Background in Engineering preferred" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="address">Address / Location</label>
+                            <textarea id="address" name="address" class="form-control"
+                                placeholder="Enter complete address for the tutor" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="expectedSalary">Expected Salary</label>
+                            <input type="text" id="expectedSalary" name="expectedSalary" class="form-control"
+                                placeholder="e.g. 5000 BDT/Month" required>
+                        </div>
+
+                        <div class="radio-group-container">
+                            <label class="main-label">Student Gender</label>
+                            <div class="radio-options">
+                                <label class="radio-option"><input type="radio" name="studentGender" value="Male"
+                                        required> Male</label>
+                                <label class="radio-option"><input type="radio" name="studentGender" value="Female">
+                                    Female</label>
+                            </div>
+                        </div>
+
+                        <div class="radio-group-container">
+                            <label class="main-label">Tutor Preference</label>
+                            <div class="radio-options">
+                                <label class="radio-option"><input type="radio" name="genderPreference" value="Male"
+                                        required> Male Only</label>
+                                <label class="radio-option"><input type="radio" name="genderPreference" value="Female">
+                                    Female Only</label>
+                                <label class="radio-option"><input type="radio" name="genderPreference" value="Any">
+                                    Any</label>
+                            </div>
+                        </div>
+
+                        <div class="submit-container">
+                            <button type="submit" class="btn-submit">POST JOB NOW</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

@@ -2,6 +2,7 @@ package com.teachquest.controller;
 
 import com.teachquest.model.StudyResource;
 import com.teachquest.service.StudyResourceService;
+import com.teachquest.service.ResourceEngagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,9 @@ public class StudyResourceController {
 
     @Autowired
     private StudyResourceService studyResourceService;
+
+    @Autowired
+    private ResourceEngagementService resourceEngagementService;
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadResource(
@@ -47,7 +51,7 @@ public class StudyResourceController {
                 return ResponseEntity.badRequest().body("Either a file or an external URL must be provided.");
             }
 
-            return ResponseEntity.ok("Resource uploaded successfully!");
+            return ResponseEntity.ok(savedResource);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Error uploading resource: " + e.getMessage());
@@ -83,5 +87,42 @@ public class StudyResourceController {
             @RequestParam String courseCode,
             @RequestParam String category) {
         return studyResourceService.getResourcesByCourseAndCategory(courseCode, category);
+    }
+
+    @PostMapping("/{resourceId}/upvote")
+    public ResponseEntity<?> upvoteResource(@PathVariable Long resourceId, @RequestParam Long userId) {
+        try {
+            return ResponseEntity.ok(studyResourceService.upvoteResource(resourceId, userId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{resourceId}/verify")
+    public ResponseEntity<?> verifyResource(@PathVariable Long resourceId, @RequestParam Long verifierId) {
+        try {
+            return ResponseEntity.ok(studyResourceService.verifyResource(resourceId, verifierId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/leaderboard")
+    public List<java.util.Map<String, Object>> leaderboard(@RequestParam(defaultValue = "all-time") String period) {
+        return resourceEngagementService.leaderboard(period);
+    }
+
+    @PostMapping("/{resourceId}/flags")
+    public ResponseEntity<?> flagResource(@PathVariable Long resourceId, @RequestBody FlagRequest request) {
+        try {
+            return ResponseEntity.ok(resourceEngagementService.createFlag(resourceId, request.reporterId, request.reason));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    public static class FlagRequest {
+        public Long reporterId;
+        public String reason;
     }
 }

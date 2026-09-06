@@ -1,0 +1,116 @@
+@import url('quiz_premium.css');
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    min-height: 100vh;
+}
+
+.sidebar {
+    background: #ffffff;
+    border-right: 1px solid #eee;
+    padding: 20px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    margin-top: 40px;
+}
+
+.menu-item {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.menu-item.active {
+    background: var(--accent-mint);
+    color: #000;
+}
+
+.menu-item:hover:not(.active) {
+    background: #f8f9fa;
+}
+
+.main-content {
+    padding: 30px;
+    background: #f4f7fa;
+}
+
+/* Charts Mockup */
+.chart-container {
+    height: 250px;
+    background: #f9f9f9;
+    border-radius: 10px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    padding: 20px;
+    border: 1px solid #eee;
+}
+
+.bar {
+    width: 40px;
+    background: var(--accent-blue);
+    border-radius: 5px 5px 0 0;
+    position: relative;
+    transition: height 0.5s;
+}
+
+.bar:hover {
+    background: var(--accent-purple);
+}
+
+.bar span {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.card-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.analytic-card {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.table-wrapper {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    color: #888;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}

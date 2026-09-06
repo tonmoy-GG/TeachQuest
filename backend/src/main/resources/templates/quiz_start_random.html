@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Quiz Generator - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <link rel="stylesheet" th:href="@{/quiz_premium.css}">
+    <style>
+        body {
+            padding-top: 100px;
+        }
+
+        .config-card {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .generate-btn {
+            width: 100%;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            padding: 15px;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 2000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div class="welcome-text" id="welcome-user">Hi, Student!!</div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="quiz-container">
+        <div class="card config-card" style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 15px;">🤖</div>
+            <h1>AI Quiz Generator</h1>
+            <p style="color: #666; margin-bottom: 30px;">Configure your personalized AI-driven assessment.</p>
+
+            <div class="form-group">
+                <label>Choose Course (CSE BD Standard)</label>
+                <select id="course">
+                    <option value="Data Structures">Data Structures</option>
+                    <option value="Algorithms">Algorithms</option>
+                    <option value="Object Oriented Programming">Object Oriented Programming</option>
+                    <option value="Database Management Systems">Database Management Systems</option>
+                    <option value="Software Engineering">Software Engineering</option>
+                    <option value="Operating Systems">Operating Systems</option>
+                    <option value="Computer Networks">Computer Networks</option>
+                    <option value="Artificial Intelligence">Artificial Intelligence</option>
+                    <option value="Theory of Computation">Theory of Computation</option>
+                    <option value="Computer Architecture">Computer Architecture</option>
+                    <option value="Digital Logic Design">Digital Logic Design</option>
+                    <option value="Web Technologies">Web Technologies</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>Difficulty</label>
+                    <select id="difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Question Type</label>
+                    <select id="type">
+                        <option value="MCQ">MCQs</option>
+                        <option value="SHORT_QUESTION">Short Questions</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Number of Questions</label>
+                <input type="number" id="count" min="1" max="10" value="5">
+            </div>
+
+            <button class="btn btn-primary generate-btn" onclick="generateQuiz()">Generate & Start Quiz</button>
+        </div>
+    </div>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <div style="font-weight: bold; color: var(--primary-blue);">AI is Crafting Your Quiz...</div>
+        <p style="color: #888;">This may take a few seconds</p>
+    </div>
+
+    <script>
+        async function generateQuiz() {
+            const course = document.getElementById('course').value;
+            const difficulty = document.getElementById('difficulty').value;
+            const type = document.getElementById('type').value;
+            const count = parseInt(document.getElementById('count').value);
+
+            document.getElementById('loading').style.display = 'flex';
+
+            try {
+                const response = await fetch('/api/quizzes/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ course, difficulty, type, count })
+                });
+
+                if (response.ok) {
+                    const questions = await response.json();
+                    sessionStorage.setItem('ai_quiz_questions', JSON.stringify(questions));
+                    sessionStorage.setItem('ai_quiz_type', type);
+                    sessionStorage.setItem('ai_quiz_course', course);
+                    window.location.href = '/adaptive-quiz'; // We will repurpose this or use a new one
+                } else {
+                    const error = await response.text();
+                    alert("Error: " + error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Failed to connect to AI server.");
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        const userStr = sessionStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            document.getElementById('welcome-user').textContent = "Hi, " + (user.name || user.username || "User") + "!!";
+        }
+
+        function logout() { sessionStorage.removeItem('user'); window.location.href = '/'; }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Question Creation - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <link rel="stylesheet" th:href="@{/teacher_create.css}">
+    <style>
+        body {
+            padding-top: 100px;
+        }
+
+        .creator-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1e293b;
+            font-size: 0.95rem;
+        }
+
+        select,
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        select:focus,
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .type-btn {
+            flex: 1;
+            padding: 15px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .type-btn.active {
+            border-color: var(--primary-blue);
+            background: #eff6ff;
+            color: var(--primary-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+        }
+
+        .difficulty-pills {
+            display: flex;
+            gap: 15px;
+        }
+
+        .diff-pill {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .diff-pill input {
+            display: none;
+        }
+
+        .diff-pill:hover {
+            background: #f8fafc;
+        }
+
+        .diff-pill.active {
+            border-color: #10b981;
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .option-marker {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            border-radius: 50%;
+            font-weight: bold;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div class="welcome-text" id="welcome-user">Hi, Teacher!!</div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-buttons" id="nav-buttons">
+            <!-- Nav Injected -->
+        </div>
+    </div>
+
+    <div class="creator-container">
+        <a th:href="@{/question-bank}"
+            style="text-decoration: none; color: var(--primary-blue); font-weight: bold; display: flex; align-items: center; gap: 8px; margin-bottom: 25px;">
+            ← Back to Question Bank
+        </a>
+
+        <div class="form-card">
+            <div style="text-align: center; margin-bottom: 40px;">
+                <h1 style="font-family: 'Quantico'; color: #1e293b;">Create New Question</h1>
+                <p style="color: #64748b;">Design high-quality assessment items for your students.</p>
+            </div>
+
+            <form id="questionForm">
+                <label>Question Format</label>
+                <div class="type-selector">
+                    <div class="type-btn active" onclick="setType('MCQ', this)">
+                        <div style="font-size: 1.5rem; margin-bottom: 5px;">📝</div>
+                        <b>MCQ</b>
+                    </div>
+                    <div class="type-btn" onclick="setType('TF', this)">
+                        <div style="font-size: 1.5rem; margin-bottom: 5px;">⚖️</div>
+                        <b>True/False</b>
+                    </div>
+                    <div class="type-btn" onclick="setType('SHORT', this)">
+                        <div style="font-size: 1.5rem; margin-bottom: 5px;">✍️</div>
+                        <b>Short Answer</b>
+                    </div>
+                </div>
+                <input type="hidden" id="qType" value="MCQ">
+
+                <div class="form-group">
+                    <label>Conceptual Difficulty</label>
+                    <div class="difficulty-pills">
+                        <label class="diff-pill active" onclick="setDiff('EASY', this)"><input type="radio"
+                                name="difficulty" value="EASY" checked> Easy</label>
+                        <label class="diff-pill" onclick="setDiff('MEDIUM', this)"><input type="radio" name="difficulty"
+                                value="MEDIUM"> Medium</label>
+                        <label class="diff-pill" onclick="setDiff('HARD', this)"><input type="radio" name="difficulty"
+                                value="HARD"> Hard</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Question Content</label>
+                    <textarea id="qText" rows="4" placeholder="Enter clear, concise question text..."></textarea>
+                </div>
+
+                <div id="mcq-section">
+                    <label>Define Options</label>
+                    <div class="option-row">
+                        <div class="option-marker">A</div>
+                        <input type="text" id="optA" placeholder="Primary option...">
+                    </div>
+                    <div class="option-row">
+                        <div class="option-marker">B</div>
+                        <input type="text" id="optB" placeholder="Second option...">
+                    </div>
+                    <div class="option-row">
+                        <div class="option-marker">C</div>
+                        <input type="text" id="optC" placeholder="Third option (Optional)...">
+                    </div>
+                    <div class="option-row">
+                        <div class="option-marker">D</div>
+                        <input type="text" id="optD" placeholder="Fourth option (Optional)...">
+                    </div>
+
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label>Verify Correct Answer</label>
+                        <select id="correctOpt">
+                            <option value="A">Choice A</option>
+                            <option value="B">Choice B</option>
+                            <option value="C">Choice C</option>
+                            <option value="D">Choice D</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Solution Explanation (Auto-Feedback)</label>
+                    <textarea id="explanation" rows="2"
+                        placeholder="Help students understand the correct choice..."></textarea>
+                </div>
+
+                <button type="button" class="btn btn-primary"
+                    style="width: 100%; padding: 18px; font-size: 1.1rem; margin-top: 20px; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.25);"
+                    onclick="saveQuestion()">
+                    🚀 Publish to Bank
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        function setType(val, btn) {
+            document.getElementById('qType').value = val;
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('mcq-section').style.display = (val === 'MCQ') ? 'block' : 'none';
+        }
+
+        function setDiff(val, btn) {
+            document.querySelectorAll('.diff-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        async function saveQuestion() {
+            const qText = document.getElementById('qText').value;
+            const qType = document.getElementById('qType').value;
+            const difficulty = document.querySelector('input[name="difficulty"]:checked').value;
+
+            if (!qText) return alert("Question text is required.");
+
+            const questionData = {
+                question: qText,
+                qCategory: qType,
+                qCorrectAnswer: "",
+                options: []
+            };
+
+            if (qType === 'MCQ') {
+                const markers = ['A', 'B', 'C', 'D'];
+                ['optA', 'optB', 'optC', 'optD'].forEach((id, idx) => {
+                    const txt = document.getElementById(id).value;
+                    if (txt) questionData.options.push({ optionLabel: markers[idx], optionText: txt });
+                });
+                if (questionData.options.length < 2) return alert("Min 2 options required.");
+                questionData.qCorrectAnswer = document.getElementById('correctOpt').value;
+            } else if (qType === 'TF') {
+                questionData.options = [{ optionLabel: 'A', optionText: 'True' }, { optionLabel: 'B', optionText: 'False' }];
+                questionData.qCorrectAnswer = prompt("Correct? A for True, B for False") || "A";
+            } else {
+                questionData.qCorrectAnswer = "AI";
+            }
+
+            try {
+                const res = await fetch('/api/quizzes/question', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(questionData)
+                });
+                if (res.ok) {
+                    alert("✅ Question published successfully!");
+                    window.location.href = '/question-bank';
+                }
+            } catch (e) { alert("Error saving question."); }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                document.getElementById('welcome-user').textContent = "Hi, " + (user.name || user.username || "User") + "!!";
+                const nav = document.getElementById('nav-buttons');
+                nav.innerHTML = `
+                    <a href="/teacher-dashboard" class="nav-btn">Dashboard</a>
+                    <a href="/question-bank" class="nav-btn active">Question Bank</a>
+                    <a href="/study-resources" class="nav-btn">Study Resources</a>
+                `;
+            } else window.location.href = '/login';
+        });
+
+        function logout() { sessionStorage.removeItem('user'); window.location.href = '/'; }
+    </script>
+</body>
+
+</html>

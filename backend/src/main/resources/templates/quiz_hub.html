@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Hub - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <link rel="stylesheet" th:href="@{/quiz_premium.css}">
+    <style>
+        /* Quiz Hub specific adjustments to avoid clashes with unified-theme */
+        body {
+            padding-top: 100px;
+        }
+
+        .quiz-container {
+            margin-top: 0;
+        }
+
+        /* Ensure premium cards look good with unified theme */
+        .option-card {
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div class="welcome-text" id="welcome-user">Hi, Student!!</div>
+            <div class="notification-wrapper">
+                <div class="notification-icon">🔔</div>
+                <div class="badge">5</div>
+            </div>
+            <div class="avatar-circle">
+                <img src="https://via.placeholder.com/40" alt="Avatar">
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-buttons">
+            <!-- Dynamic Nav Injected here -->
+        </div>
+    </div>
+
+    <div class="quiz-container">
+        <h2 style="text-align: center; margin-bottom: 40px; border-left: none; padding-left: 0;">Select a Quiz Mode</h2>
+
+        <div class="options-grid" style="grid-template-columns: repeat(2, 1fr); gap: 30px;">
+
+            <a th:href="@{/quiz-start-random}" class="card option-card"
+                style="display: block; text-decoration: none; color: inherit;">
+                <h3 style="margin-bottom: 10px;">🎲 Random / Adaptive Quiz</h3>
+                <p style="color: #666; margin-bottom: 20px;">
+                    Questions adapt to your skill level. Best for testing your overall knowledge.
+                </p>
+                <span class="btn btn-secondary" style="width: 100%;">Start Now</span>
+            </a>
+
+            <a th:href="@{/section-quiz}" class="card option-card"
+                style="display: block; text-decoration: none; color: inherit;">
+                <h3 style="margin-bottom: 10px;">📑 Section-Wise Quiz</h3>
+                <p style="color: #666; margin-bottom: 20px;">
+                    Focus on specific topics (MCQ, True/False, Short Answer). Good for targeted practice.
+                </p>
+                <span class="btn btn-secondary" style="width: 100%;">Practice</span>
+            </a>
+
+            <a th:href="@{/case-study-quiz}" class="card option-card"
+                style="display: block; text-decoration: none; color: inherit;">
+                <h3 style="margin-bottom: 10px;">🧩 Case Study / Scenario</h3>
+                <p style="color: #666; margin-bottom: 20px;">
+                    Solve complex, real-world problems. Best for advanced learners.
+                </p>
+                <span class="btn btn-secondary" style="width: 100%;">Solve</span>
+            </a>
+
+            <a th:href="@{/quiz-result-ai}" class="card option-card"
+                style="display: block; text-decoration: none; color: inherit;">
+                <h3 style="margin-bottom: 10px;">📊 Past Results & AI Feedback</h3>
+                <p style="color: #666; margin-bottom: 20px;">
+                    Review your performance and get AI-driven insights on how to improve.
+                </p>
+                <span class="btn btn-secondary" style="width: 100%;">View History</span>
+            </a>
+
+        </div>
+    </div>
+
+    <script>
+        function renderNav(user) {
+            const navButtons = document.querySelector('.nav-buttons');
+            if (!navButtons) return;
+
+            let html = '';
+            const isTeacher = user.userType === 'teacher';
+            const dashLink = isTeacher ? '/teacher-dashboard' : '/student-dashboard';
+
+            html += `<a id="dash-link" href="${dashLink}" class="nav-btn">Dashboard</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/job-board" class="nav-btn">Job Board</a>`;
+                html += `<a href="/view-applied-jobs" class="nav-btn">My Applications</a>`;
+            } else {
+                html += `<a href="/view-applicants" class="nav-btn">My Posted Jobs</a>`;
+                html += `<a href="/job-portal" class="nav-btn">Post a New Job</a>`;
+                html += `<a href="/quiz-hub" class="nav-btn active">Quiz Hub</a>`;
+            }
+
+            html += `<a href="/study-resources" class="nav-btn">Study Resources</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/upload-resource" class="nav-btn">Upload Resources</a>`;
+                html += `<a href="/question-bank" class="nav-btn" style="background-color: #D4F8E6;">Question Bank</a>`;
+            }
+            navButtons.innerHTML = html;
+        }
+
+        function init() {
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                document.getElementById('welcome-user').textContent = "Hi, " + (user.name || user.username || "User") + "!!";
+                renderNav(user);
+            } else {
+                window.location.href = '/login';
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>

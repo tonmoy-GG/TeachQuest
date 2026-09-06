@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration - TeachQuest</title>
+    <link rel="stylesheet" th:href="@{/registration.css}">
+    <script>
+        function showError(message) {
+            // Can be replaced with a nicer UI element
+            alert(message);
+        }
+
+        function showSuccess(message) {
+            const popup = document.getElementById('popup-container');
+            const msg = popup.querySelector('h3');
+            msg.textContent = message;
+            popup.style.display = 'flex';
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            if (data.password !== data.confirmPassword) {
+                showError("Passwords do not match!");
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showSuccess("Account created successfully!");
+                } else {
+                    const errorText = await response.text();
+                    showError(errorText || "Registration failed");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                showError("An error occurred during registration.");
+            }
+        }
+    </script>
+    <style>
+        /* Ensure popup is hidden by default and styled if not in css file */
+        .popup-container {
+            display: none;
+            /* Add necessary styles here or rely on registration.css */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <button onclick="window.history.back()" class="back-btn" title="Go Back">←</button>
+    <header class="branding-header">
+        <h2 class="brand-title">TeachQuest</h2>
+    </header>
+
+    <div class="registration-container">
+        <div class="image-side">
+            <img th:src="@{/image.png}" alt="Registration Image">
+        </div>
+
+        <div class="registration-card">
+            <h2 class="form-title">Create an Account</h2>
+
+            <!-- Success Modal -->
+            <div class="popup-container" id="popup-container">
+                <div class="popup">
+                    <h3>Account created successfully!</h3>
+                    <a th:href="@{/}" class="btn-register">Login Now</a>
+                </div>
+            </div>
+
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="contactNo" name="contactNo" placeholder="Enter your phone number" required>
+                </div>
+                <div class="form-group">
+                    <label for="universityId">University ID</label>
+                    <input type="text" id="universityId" name="universityId" placeholder="Enter your university ID"
+                        required>
+                </div>
+                <!-- Note: The PHP had 'phone' and 'contactNo', but User model usually has one 'contactNo'. 
+                     Checked User.java: has 'contactNo'. The PHP form had BOTH. 
+                     PHP Logic: $phone = $_POST['phone']; $contactNo = $_POST['contactNo'];
+                     SQL: INSERT ... contact_no ... VALUES ... $contactNo
+                     It seems $phone was unused or redundant in SQL insert provided in registration.php snippet?
+                     Snippet: VALUES (?, ?, ?, ?, ?, '', ?) -> ssssss -> username, universityId, contactNo, hashedPassword, email, role.
+                     Wait, 6 bind params for 7 placeholders? No.
+                     Columns: username, university_id, contact_no, password, email, address, user_type
+                     Values: ?, ?, ?, ?, ?, '', ?
+                     Bind: "ssssss" (6 types) -> username, universityId, contactNo, hashedPassword, email, role.
+                     There are 7 placeholders. 6 params. Something is fishy in PHP code.
+                     Ah, 'address' is hardcoded as empty string ''. So 6 params is correct for 6 bound variables.
+                     'phone' was retrieved but NOT utilized in the SQL. I will ignore 'phone' input or map it to contactNo if better.
+                     I'll stick to 'contactNo' mapping to 'contactNo'.
+                -->
+
+                <!-- If I keep both inputs for UI consistency, I should only send one. 
+                     Let's check the HTML again. -->
+
+                <div class="form-group">
+                    <label for="contactNo">Contact Number</label>
+                    <input type="tel" id="contactNoConfirm" name="contactNo" placeholder="Enter your contact number"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword"
+                        placeholder="Confirm your password" required>
+                </div>
+                <!-- Role Selection -->
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="userType" required> <!-- Mapped to userType in User entity -->
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="job_poster">Job Poster</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-register">Register</button>
+            </form>
+            <p class="back-to-login">
+                Already have an account? <a th:href="@{/}">Login</a>
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <style>
+        /* Dashboard specific overrides */
+        .content-section {
+            padding: 0 40px;
+            margin-bottom: 40px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-weight: bold;
+        }
+
+        th {
+            background-color: var(--table-header);
+            padding: 15px 20px;
+            text-align: left;
+            color: black;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            border-bottom: 2px solid white;
+        }
+
+        td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stars {
+            color: #FFD700;
+            font-size: 1.2em;
+        }
+    </style>
+
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div class="welcome-text">Hi, Teacher!!</div>
+            <div class="avatar-circle">
+                <img src="https://i.pravatar.cc/150?u=teacher" alt="Avatar">
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-buttons">
+            <!-- Dynamic Nav -->
+        </div>
+    </div>
+
+    <!-- Current Jobs Section -->
+    <div class="content-section">
+        <h2>Active Tutions</h2>
+        <div class="table-container">
+            <table id="current-jobs-table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Subjects</th>
+                        <th>Salary</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="current-jobs-body">
+                    <tr>
+                        <td colspan="5" style="text-align:center;">Loading active tuitions...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Available Jobs Shortcut Section -->
+    <div class="content-section">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>Recent Job Openings</h2>
+            <a href="/job-board" style="color:var(--primary-blue); font-weight:bold; text-decoration:none;">View All
+                →</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Location</th>
+                        <th>Salary</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="available-jobs-body">
+                    <tr>
+                        <td colspan="4" style="text-align:center;">Checking for new opportunities...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function renderNav(user) {
+            const navButtons = document.querySelector('.nav-buttons');
+            if (!navButtons) return;
+
+            let html = '';
+            const isTeacher = user.userType === 'teacher';
+            const dashLink = isTeacher ? '/teacher-dashboard' : '/student-dashboard';
+
+            html += `<a id="dash-link" href="${dashLink}" class="nav-btn active">Dashboard</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/job-board" class="nav-btn">Job Board</a>`;
+                html += `<a href="/view-applied-jobs" class="nav-btn">My Applications</a>`;
+            } else {
+                html += `<a href="/view-applicants" class="nav-btn">My Posted Jobs</a>`;
+                html += `<a href="/job-portal" class="nav-btn">Post a New Job</a>`;
+                html += `<a href="/quiz-hub" class="nav-btn">Quiz Hub</a>`;
+            }
+
+            html += `<a href="/study-resources" class="nav-btn">Study Resources</a>`;
+            html += `<a href="/upload-resource" class="nav-btn">Upload Resources</a>`;
+            html += `<a href="/chat" class="nav-btn">Chat</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/question-bank" class="nav-btn" style="background-color: #D4F8E6;">Question Bank</a>`;
+            }
+            navButtons.innerHTML = html;
+        }
+
+        async function fetchRecentJobs() {
+            try {
+                const response = await fetch('/api/jobs/all');
+                if (response.ok) {
+                    const jobs = await response.json();
+                    const body = document.getElementById('available-jobs-body');
+                    body.innerHTML = '';
+
+                    // Show latest 3 jobs
+                    const recentJobs = jobs.slice(-3).reverse();
+
+                    if (recentJobs.length === 0) {
+                        body.innerHTML = '<tr><td colspan="4" style="text-align:center;">No new jobs posted yet.</td></tr>';
+                        return;
+                    }
+
+                    recentJobs.forEach(job => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${job.subject}</td>
+                            <td>${job.address}</td>
+                            <td>${job.salary}</td>
+                            <td><a href="/job-board" class="nav-btn" style="padding:5px 10px; font-size:0.8em; background:#AFCCF1;">Apply</a></td>
+                        `;
+                        body.appendChild(tr);
+                    });
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function fetchActiveTuitions(teacherId) {
+            try {
+                console.log("Fetching active tuitions for teacher:", teacherId);
+                const response = await fetch(`/api/applications/my-applications/${teacherId}`);
+                if (!response.ok) throw new Error("Failed to fetch applications");
+
+                const apps = await response.json();
+                console.log("All applications:", apps);
+                const body = document.getElementById('current-jobs-body');
+                body.innerHTML = '';
+
+                const activeApps = apps.filter(a => (a.status || '').toUpperCase() === 'HIRED');
+                console.log("Filtered HIRED applications:", activeApps);
+
+                if (activeApps.length === 0) {
+                    body.innerHTML = '<tr><td colspan="4" style="text-align:center;">You haven\'t been hired for any jobs yet.</td></tr>';
+                    return;
+                }
+
+                // Process in parallel for speed
+                const rows = await Promise.all(activeApps.map(async app => {
+                    try {
+                        const jobRes = await fetch(`/api/jobs/${app.jobId}`);
+                        if (!jobRes.ok) return null;
+                        const job = await jobRes.json();
+
+                        const studentRes = await fetch(`/api/users/${job.userId}`);
+                        if (!studentRes.ok) return null;
+                        const student = await studentRes.json();
+
+                        return `
+                            <tr>
+                                <td>${student.name || student.username || ("Student #" + job.userId)}</td>
+                                <td>${job.subject}</td>
+                                <td>${job.salary}</td>
+                                <td><span style="color:#28a745; font-weight:bold;">HIRED</span></td>
+                                <td><a href="/chat?targetUserId=${student.id}" class="nav-btn" style="padding:5px 10px; font-size:0.8em; background:#D4F8E6;">Message</a></td>
+                            </tr>
+                        `;
+                    } catch (e) {
+                        console.error("Error fetching details for app:", app, e);
+                        return null;
+                    }
+                }));
+
+                const validRows = rows.filter(r => r !== null);
+                if (validRows.length === 0) {
+                    body.innerHTML = '<tr><td colspan="5" style="text-align:center;">Details could not be loaded.</td></tr>';
+                } else {
+                    body.innerHTML = validRows.join('');
+                }
+            } catch (err) {
+                console.error("Error in fetchActiveTuitions:", err);
+                document.getElementById('current-jobs-body').innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Failed to load active tuitions.</td></tr>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                const nameSpan = document.querySelector('.welcome-text');
+                nameSpan.innerHTML = `Hi, ${user.name || user.username || "Teacher"}!!`;
+                renderNav(user);
+                fetchRecentJobs();
+                fetchActiveTuitions(user.id);
+            } else {
+                window.location.href = '/login';
+            }
+        });
+
+        function logout() {
+            sessionStorage.removeItem('user');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+
+</html>

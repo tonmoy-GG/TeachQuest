@@ -1,0 +1,568 @@
+/* General reset and base styles */
+@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Quantico';
+    /* Applying Quantico font */
+    background-color: #f4f7fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    /* To prevent scrollbars */
+}
+
+/* Container with two sections (image and selection card) */
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 80%;
+    height: 100%;
+}
+
+/* Left side image container */
+.image-side {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-side img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Right side selection card */
+.selection-card {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 40%;
+    /* Right side takes up 40% of the space */
+}
+
+.selection-card h1 {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.selection-card p {
+    font-size: 16px;
+    color: #777;
+    margin-bottom: 30px;
+}
+
+/* Button group styling */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    /* Ensure the buttons take up the full width of the card */
+}
+
+.btn {
+    font-family: 'Quantico';
+    font-weight: 550;
+    padding: 15px;
+    font-size: 16px;
+    background-color: #D4F8E6;
+    /* Updated background color */
+    color: #333;
+    /* Darker text color for contrast */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Center-align text and icon */
+    gap: 10px;
+    transition: background-color 0.3s ease, transform 0.2s;
+    width: 100%;
+    /* Make buttons consistent in size */
+    max-width: 300px;
+    /* Prevent buttons from being too large */
+    margin: 0 auto;
+    /* Center buttons horizontally */
+}
+
+.btn-icon {
+    max-width: 20px;
+    /* Set the size of the logo icons */
+    height: auto;
+}
+
+.btn:hover {
+    background-color: #A1F0C1;
+    /* Slightly darker shade on hover */
+    transform: translateY(-3px);
+}
+
+.btn:active {
+    background-color: #8FE0A3;
+    /* Even darker shade when clicked */
+    transform: translateY(0);
+}
+
+/* Styling for the "Don't have an account?" link */
+
+
+.create-account {
+    font-size: 14px;
+    color: #555;
+    margin-top: 20px;
+    font-family: 'Quantico';
+}
+
+.create-account a {
+    color: #007bff;
+    /* Blue color for the link */
+    text-decoration: none;
+}
+
+.create-account a:hover {
+    text-decoration: underline;
+    /* Underline on hover */
+}
+
+
+
+
+/* Add your existing selection page styles above this */
+
+/* Add login page specific styles below this */
+
+/* General reset and base styles */
+/* General reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Quantico', sans-serif;
+    /* Applying Quantico font */
+    background-color: #f4f7fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    /* To prevent scrollbars */
+}
+
+/* Branding header - Position TeachQuest at top left with no padding */
+.branding-header {
+    width: 100%;
+    background-color: white;
+    font-weight: bold;
+    color: black;
+    padding: 0;
+    /* Remove padding */
+    position: fixed;
+    top: 0;
+    left: 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Branding logo */
+.brand-logo h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: left;
+    padding-left: 20px;
+    /* Add left padding to keep space from the edge */
+    line-height: 50px;
+    /* Ensure vertical centering if necessary */
+}
+
+
+/* Login card styling */
+.login-card {
+    background-color: #ffffff;
+    padding: 20px;
+    font-weight: bold;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+/* Student Icon styling (between "Welcome Back" and Email) */
+.student-icon {
+    margin: 20px 0;
+}
+
+.student-icon img {
+    width: 40px;
+    /* Set appropriate size for the student icon */
+    height: auto;
+}
+
+/* Form group */
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+/* Form labels */
+.form-group label {
+    display: block;
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+/* Form inputs */
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: #6200ee;
+}
+
+/* Login button */
+.btn-login {
+    background-color: #D9D9D9;
+    color: black;
+    padding: 10px 15px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.btn-login:hover {
+    background-color: #5a00d3;
+}
+
+/* Register link */
+.register-link {
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+
+.register-link a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.register-link a:hover {
+    text-decoration: underline;
+}
+
+/* Back to selection page link */
+.back-to-selection {
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.back-to-selection a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.back-to-selection a:hover {
+    text-decoration: underline;
+}
+
+.Teacher img {
+    width: 50px;
+    /* Set the width of the icon */
+    height: auto;
+    /* Maintain the aspect ratio */
+    margin-left: 200px;
+    /* Move the icon a little to the right */
+}
+
+.student-icon img {
+    width: 50px;
+    /* Set the width of the icon */
+    height: auto;
+    /* Maintain the aspect ratio */
+    margin-left: 200px;
+    /* Move the icon a little to the right */
+}
+
+
+
+/* registration css*/
+
+/* General reset and base styles */
+/* General reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Quantico', sans-serif;
+    /* Applying Quantico font */
+    background-color: #f4f7fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Registration page container */
+.registration-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    max-width: 1200px;
+    height: 100%;
+}
+
+/* Left side image container */
+.image-side {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-side img {
+    max-width: 90%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Right side registration form inside a square box */
+.registration-form {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+    height: 450px;
+    /* Set the height of the square form */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* Distribute space evenly */
+    margin-left: 20px;
+}
+
+/* Heading */
+.registration-form h1 {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Form input fields */
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-group label {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: #6200ee;
+}
+
+/* Register button */
+.btn-register {
+    background-color: #6200ee;
+    color: #fff;
+    padding: 10px 15px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.btn-register:hover {
+    background-color: #5a00d3;
+}
+
+/* Link to login page */
+.login-link {
+    font-size: 14px;
+    color: #555;
+    margin-top: 20px;
+}
+
+.login-link a {
+    color: #6200ee;
+    text-decoration: none;
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}
+
+
+/*job_post css*/
+
+
+/* job-post.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap');
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+    /* Background color from the image */
+}
+
+.job-post-container {
+    background-color: #DDDBDE;
+    /* Box color from the image */
+    padding: 30px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    /* Adjust width as needed */
+    font-family: 'Quantico', sans-serif;
+}
+
+.teach-quest-logo {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+
+.post-job-heading {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.textarea {
+    height: 80px;
+    /* Adjust height as needed */
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 15px;
+}
+
+.radio-group label {
+    margin-right: 15px;
+}
+
+.button-container {
+    text-align: center;
+    /* Center the button */
+}
+
+.post-job-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+
+
+/* Classy Back Button Style */
+.back-btn {
+    position: fixed;
+    top: 25px;
+    left: 25px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 12px 18px;
+    border-radius: 50px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    cursor: pointer;
+    z-index: 1001;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-decoration: none;
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
+.back-btn:hover {
+    transform: scale(1.05) translateX(5px);
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.back-btn::before {
+    content: "←";
+    margin-right: 8px;
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.back-btn:hover::before {
+    transform: translateX(-3px);
+}
+
+.back-btn::after {
+    content: "Back";
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}

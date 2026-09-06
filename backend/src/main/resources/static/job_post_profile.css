@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap'); 
+body {
+    font-family: 'Quantico';
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+}
+
+header {
+    background-color: white;
+    padding: 10px 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.teach-quest {
+    font-size: 1.5rem;
+    color: black;
+    margin: 0;
+}
+
+.logout-button {
+    text-decoration: none;;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #70E8E8;
+    color: black;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.welcome-message {
+    text-align: center;
+    font-size: 1.8rem;
+    margin: 10px 0;
+    color: #333;
+}
+
+.separator-line {
+    margin: 0 20px;
+    border: none;
+    border-top: 1px solid black;
+}
+
+.job-posting-header {
+    display: flex;
+    justify-content: flex-end;
+    margin: 20px 20px 10px;
+}
+
+.post-job-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+main {
+    padding: 20px;
+}
+
+.job-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.job-card {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.job-card h2 {
+    margin-top: 0;
+    color: #333;
+}
+
+.job-card p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.job-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.job-actions button {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+}
+
+.view-applicants {
+    background-color: #007bff;
+}
+
+.edit-job {
+    background-color: #ffc107;
+}
+
+.delete-job {
+    background-color: #dc3545;
+}
+
+.posted-time {
+    font-size: 0.85rem;
+    color: gray;
+}
