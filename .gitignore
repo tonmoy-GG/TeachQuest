@@ -1,0 +1,18 @@
+# Active React project
+frontend/node_modules/
+frontend/dist/
+
+# Legacy project archive
+TeachQuest(AOOP)/target/
+TeachQuest(AOOP)/uploads/
+TeachQuest(AOOP)/*.log
+
+# Local runtime data and generated files
+uploads/
+*.log
+*.tmp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+Thumbs.db
+.DS_Store

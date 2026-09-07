@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Applicants - TeachQuest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/unified-theme.css}">
+    <style>
+        :root {
+            --teal-accent: #5FE0D8;
+        }
+
+        .applicants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .applicant-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s;
+        }
+
+        .applicant-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .details p {
+            margin: 10px 0;
+            font-size: 1.1em;
+            line-height: 1.5;
+            color: #444;
+        }
+
+        .details strong {
+            font-weight: 700;
+            color: #000;
+            display: inline-block;
+            width: 130px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .btn {
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.95em;
+            flex: 1;
+            text-align: center;
+            text-decoration: none;
+            color: black;
+            background: var(--teal-accent);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .btn-reject {
+            background-color: #f4b0af;
+        }
+
+        .status-badge {
+            font-weight: bold;
+            padding: 10px;
+            color: #555;
+            background: #f8f9fa;
+            border-radius: 6px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .back-nav {
+            margin-bottom: 20px;
+        }
+
+        .no-applicants {
+            width: 100%;
+            text-align: center;
+            padding: 60px;
+            color: #888;
+            font-size: 1.2em;
+            background: #fdfdfd;
+            border-radius: 12px;
+            grid-column: 1 / -1;
+        }
+    </style>
+    <script>
+        let currentJobId = null;
+
+        function renderNav(user) {
+            const navButtons = document.querySelector('.nav-buttons');
+            if (!navButtons) return;
+
+            let html = '';
+            const isTeacher = user.userType === 'teacher';
+            const dashLink = isTeacher ? '/teacher-dashboard' : '/student-dashboard';
+
+            html += `<a id="dash-link" href="${dashLink}" class="nav-btn">Dashboard</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/job-board" class="nav-btn">Job Board</a>`;
+                html += `<a href="/view-applied-jobs" class="nav-btn">My Applications</a>`;
+            } else {
+                html += `<a href="/view-applicants" class="nav-btn active">My Posted Jobs</a>`;
+                html += `<a href="/job-portal" class="nav-btn">Post a New Job</a>`;
+            }
+
+            html += `<a href="/study-resources" class="nav-btn">Study Resources</a>`;
+
+            if (isTeacher) {
+                html += `<a href="/upload-resource" class="nav-btn">Upload Resources</a>`;
+                html += `<a href="/question-bank" class="nav-btn" style="background-color: #D4F8E6;">Question Bank</a>`;
+            }
+            navButtons.innerHTML = html;
+        }
+
+        async function init() {
+            const params = new URLSearchParams(window.location.search);
+            currentJobId = params.get('jobId');
+
+            const userStr = sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                document.getElementById('welcome-user').textContent = "Hi, " + (user.name || user.username || "User") + "!!";
+                renderNav(user);
+
+                if (user.userType !== 'student') {
+                    document.getElementById('main-content').innerHTML = `
+                        <div class="container" style="text-align:center; padding: 100px 20px;">
+                            <h2 style="font-size: 2.5em; color: #dc3545;">Access Restricted</h2>
+                            <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">Only students who posted this job can manage applicants.</p>
+                            <a href="/teacher-dashboard" class="nav-btn" style="display:inline-block; background:var(--primary-blue-local); color:white; text-decoration:none; padding: 12px 30px; border-radius: 8px;">Back to Dashboard</a>
+                        </div>
+                    `;
+                    return;
+                }
+            } else {
+                window.location.href = '/login';
+                return;
+            }
+
+            if (!currentJobId) {
+                alert("No Job ID provided.");
+                window.location.href = '/view-applicants';
+                return;
+            }
+
+            await fetchJobDetails();
+            await fetchApplicants();
+        }
+
+        async function fetchJobDetails() {
+            try {
+                const response = await fetch(`/api/jobs/${currentJobId}`);
+                if (response.ok) {
+                    const job = await response.json();
+                    document.getElementById('job-subject').textContent = job.subject;
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function fetchApplicants() {
+            try {
+                const response = await fetch(`/api/applications/job/${currentJobId}`);
+                if (response.ok) {
+                    const applications = await response.json();
+                    renderApplicants(applications);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function renderApplicants(applications) {
+            const grid = document.getElementById('applicants-grid');
+            grid.innerHTML = '';
+            if (applications.length === 0) {
+                grid.innerHTML = '<div class="no-applicants">No one has applied for this job yet.</div>';
+                return;
+            }
+
+            for (const app of applications) {
+                const user = await fetchUserDetails(app.tutorId);
+                if (!user) continue;
+                const status = (app.status || 'PENDING').toUpperCase();
+                const card = document.createElement('div');
+                card.className = 'applicant-card';
+                card.innerHTML = `
+                    <div class="details">
+                        <p><strong>Tutor Name:</strong> ${user.username}</p>
+                        <p><strong>ID/Phone:</strong> ${user.universityId || user.contactNo || 'N/A'}</p>
+                        <p><strong>Applied:</strong> ${new Date(app.appliedAt).toLocaleDateString()}</p>
+                    </div>
+                    <div class="actions">
+                        <button class="btn" onclick="chatWithTutor(${user.id})">Chat</button>
+                        ${status === 'PENDING' ?
+                        `<button class="btn" onclick="hireTutor(${user.id})">Hire</button>
+                             <button class="btn btn-reject" onclick="rejectTutor(${user.id})">Reject</button>` :
+                        `<div class="status-badge">${status}</div>`
+                    }
+                    </div>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        async function fetchUserDetails(userId) {
+            try {
+                const response = await fetch(`/api/users/${userId}`);
+                if (response.ok) return await response.json();
+            } catch (err) { console.error(err); }
+            return null;
+        }
+
+        function chatWithTutor(tutorId) { window.location.href = `/chat?targetUserId=${tutorId}`; }
+        async function hireTutor(tutorId) {
+            if (!confirm("Confirm hiring this tutor?")) return;
+            try {
+                const response = await fetch(`/api/applications/hire?jobId=${currentJobId}&tutorId=${tutorId}`, { method: 'POST' });
+                if (response.ok) { alert("Tutor hired successfully!"); fetchApplicants(); }
+            } catch (err) { console.error(err); }
+        }
+        async function rejectTutor(tutorId) {
+            if (!confirm("Confirm rejection?")) return;
+            try {
+                const response = await fetch(`/api/applications/reject?jobId=${currentJobId}&tutorId=${tutorId}`, { method: 'POST' });
+                if (response.ok) { alert("Applicant rejected."); fetchApplicants(); }
+            } catch (err) { console.error(err); }
+        }
+        function logout() { sessionStorage.removeItem('user'); window.location.href = '/'; }
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</head>
+
+<body>
+    <header id="main-header">
+        <div class="brand">
+            <h1>TeachQuest</h1>
+        </div>
+        <div class="user-controls">
+            <div class="welcome-text" id="welcome-user">Hi!!</div>
+            <div class="avatar-circle"><img src="https://i.pravatar.cc/150?u=user" alt="Avatar"></div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-buttons">
+            <a id="dash-link" href="#" class="nav-btn">Dashboard</a>
+            <a th:href="@{/view-applicants}" class="nav-btn active">My Posted Jobs</a>
+            <a th:href="@{/job-portal}" class="nav-btn">Post a New Job</a>
+            <a th:href="@{/study-resources}" class="nav-btn">Study Resources</a>
+        </div>
+    </div>
+
+    <main>
+        <div class="container">
+            <div class="back-nav">
+                <a href="/view-applicants" style="text-decoration:none; color:var(--primary-blue); font-weight:bold;">←
+                    Back to My Jobs</a>
+            </div>
+            <h2>Applicants for "<span id="job-subject">...</span>"</h2>
+            <div id="applicants-grid" class="applicants-grid">
+                <div class="no-applicants">Loading applicants...</div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

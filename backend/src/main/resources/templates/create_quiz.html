@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Create Quiz - TeachQuest</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <script>
+        // Store questions in memory before submitting
+        let questions = [];
+
+        function addQuestion() {
+            const qText = document.getElementById('questionText').value;
+            const opA = document.getElementById('optionA').value;
+            const opB = document.getElementById('optionB').value;
+            const opC = document.getElementById('optionC').value;
+            const opD = document.getElementById('optionD').value;
+            const correct = document.getElementById('correctOption').value;
+
+            if (!qText || !opA || !opB || !opC || !opD) {
+                alert("Please fill all fields");
+                return;
+            }
+
+            const questionObj = {
+                question: qText,
+                correctOption: correct,
+                options: [
+                    { optionLabel: 'A', optionText: opA },
+                    { optionLabel: 'B', optionText: opB },
+                    { optionLabel: 'C', optionText: opC },
+                    { optionLabel: 'D', optionText: opD }
+                ]
+            };
+
+            questions.push(questionObj);
+            renderQuestions();
+            clearInputs();
+        }
+
+        function renderQuestions() {
+            const list = document.getElementById('questionsList');
+            list.innerHTML = '';
+            questions.forEach((q, index) => {
+                const item = document.createElement('li');
+                item.textContent = `${index + 1}. ${q.question} (Correct: ${q.correctOption})`;
+                list.appendChild(item);
+            });
+        }
+
+        function clearInputs() {
+            document.getElementById('questionText').value = '';
+            document.getElementById('optionA').value = '';
+            document.getElementById('optionB').value = '';
+            document.getElementById('optionC').value = '';
+            document.getElementById('optionD').value = '';
+        }
+
+        async function submitQuiz() {
+            const title = document.getElementById('quizTitle').value;
+            const marks = document.getElementById('totalMarks').value; // Not used in current model but kept for UI parity
+
+            if (!title) {
+                alert("Please enter quiz title");
+                return;
+            }
+            if (questions.length === 0) {
+                alert("Please add at least one question");
+                return;
+            }
+
+            const quizData = {
+                title: title,
+                totalMarks: parseInt(marks) || 0,
+                questions: questions
+            };
+
+            try {
+                const response = await fetch('/api/quizzes/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(quizData)
+                });
+
+                if (response.ok) {
+                    alert("Quiz created successfully!");
+                    window.location.href = '/study-resources'; // Redirect back
+                } else {
+                    alert("Failed to create quiz");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error submitting quiz");
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <button onclick="window.history.back()" class="back-btn" title="Go Back">←</button>
+    <div class="container">
+        <h1>Create New Quiz</h1>
+
+        <label>Quiz Title:</label>
+        <input type="text" id="quizTitle" placeholder="e.g. Java Basics"><br><br>
+
+        <label>Total Marks:</label>
+        <input type="number" id="totalMarks" value="10"><br><br>
+
+        <h3>Add Question</h3>
+        <label>Question:</label>
+        <textarea id="questionText"></textarea><br>
+
+        <label>Option A:</label> <input type="text" id="optionA"><br>
+        <label>Option B:</label> <input type="text" id="optionB"><br>
+        <label>Option C:</label> <input type="text" id="optionC"><br>
+        <label>Option D:</label> <input type="text" id="optionD"><br>
+
+        <label>Correct Option:</label>
+        <select id="correctOption">
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+        </select>
+
+        <button onclick="addQuestion()">Add Question</button>
+
+        <h3>Questions Added:</h3>
+        <ul id="questionsList"></ul>
+
+        <button onclick="submitQuiz()" style="margin-top:20px; font-size:1.2em;">Save Quiz</button>
+    </div>
+</body>
+
+</html>

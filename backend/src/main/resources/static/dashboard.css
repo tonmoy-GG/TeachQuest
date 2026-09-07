@@ -1,0 +1,169 @@
+/* Reset Styles */
+@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap'); 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Quantico' ;
+    background-color: #f9f9f9;
+    font-weight: bold;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: #ffffff;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+
+/* Logo */
+.dashboard-logo-container h1 {
+    font-size: 24px;
+    font-weight: bold;
+    color: black;
+}
+
+/* User Section */
+.dashboard-user-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Hi, Student! and Notification */
+.dashboard-user-details {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Adds spacing between "Hi, Student!!" and the bell */
+}
+
+.dashboard-notification-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.dashboard-notification-container i {
+    font-size: 22px; /* Adjust the size of the bell icon */
+    cursor: pointer;  /* Makes it look clickable */
+}
+
+.dashboard-notification-badge {
+    background: red;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 7px;
+    border-radius: 50%;
+    position: absolute;
+    top: -5px;
+    right: -10px;
+}
+
+/* Profile Picture */
+.dashboard-user-profile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+/* Logout Button */
+.dashboard-logout-button {
+    text-decoration: none;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #70E8E8;
+    color: black;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.dashboard-logout-button:hover {
+    background-color: #cc0000;
+}
+
+/* Divider Line */
+.dashboard-divider {
+    width: 100%;
+    height: 2px;
+    background-color: #ccc;
+    margin-top: 65px; /* Pushes content below the fixed header */
+}
+
+/* Dashboard Menu Section */
+.dashboard-menu {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px auto;
+    max-width: 80%;
+}
+
+/* Square Menu Items */
+.menu-item {
+    text-decoration: none;
+    flex: 1;
+    text-align: center;
+    background-color: #84D7F3;
+    color: black;
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.menu-item:hover {
+    background-color: #84D7F3;
+}
+
+/* Hires Sections (Current & Previous) */
+.dashboard-hires-section {
+    background-color: #ffffff;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Section Title */
+.dashboard-hires-section h2 {
+    font-size: 22px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+/* Table Styling */
+.dashboard-hire-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dashboard-hire-table th, .dashboard-hire-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.dashboard-hire-table th {
+    background-color: #9AAEEF;
+    color:black;
+    font-weight: bold;
+}
+
+/* Star Rating */
+.star {
+    color: gold;
+}

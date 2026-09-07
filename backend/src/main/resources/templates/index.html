@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeachQuest - Welcome</title>
+    <!-- Importing fonts from dashboard -->
+    <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #E9ECEF;
+            --card-bg: #FFFFFF;
+            --btn-bg: #DAF7E8;
+            --text-main: #000000;
+            --text-accent: #0066FF;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Quantico', sans-serif;
+            background-color: var(--primary-bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .main-container {
+            display: flex;
+            width: 90%;
+            max-width: 1000px;
+            background: transparent;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+        }
+
+        .illustration-side {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .illustration-side img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 20px;
+        }
+
+        .login-card {
+            flex: 0 1 420px;
+            background: var(--card-bg);
+            padding: 50px 40px;
+            border-radius: 30px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .logo h1 {
+            font-family: 'Quantico', sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+            margin-bottom: 40px;
+            color: var(--text-main);
+            letter-spacing: 1px;
+        }
+
+        .selection-options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .role-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background-color: var(--btn-bg);
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .role-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            filter: brightness(0.95);
+        }
+
+        .role-btn img {
+            width: 30px;
+            height: 30px;
+        }
+
+        .footer-text {
+            margin-top: 50px;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .footer-text a {
+            color: var(--text-accent);
+            text-decoration: none;
+            font-style: italic;
+        }
+
+        .footer-text a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 850px) {
+            .main-container {
+                flex-direction: column;
+                margin: 40px 0;
+            }
+
+            .illustration-side {
+                order: 2;
+            }
+
+            .login-card {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+
+        /* Back Button Style */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1000;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            text-decoration: none;
+            color: black;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.1);
+            background: #f0f0f0;
+        }
+
+        .back-btn:hover::after {
+            content: " Go Back";
+            font-size: 0.9rem;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <body>
+
+        <div class="main-container">
+            <!-- Left Side Illustration -->
+            <div class="illustration-side">
+                <img th:src="@{/images/selection_illustration.png}" alt="Education Illustration">
+            </div>
+
+            <!-- Right Side Login Card -->
+            <div class="login-card">
+                <div class="logo">
+                    <h1>TeachQuest</h1>
+                </div>
+
+                <div class="selection-options">
+                    <a th:href="@{/login/student}" class="role-btn">
+                        <span>🎓</span> Login as a Student
+                    </a>
+                    <a th:href="@{/login/teacher}" class="role-btn">
+                        <span>👨‍🏫</span> Login as a Tutor
+                    </a>
+                    <a th:href="@{/login/jobposter}" class="role-btn">
+                        <span>📋</span> Post a Job
+                    </a>
+                </div>
+
+                <div class="footer-text">
+                    Dont Have an Account ? <a th:href="@{/register}">create one</a>
+                </div>
+            </div>
+        </div>
+
+    </body>
+
+</html>

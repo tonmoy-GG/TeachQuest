@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Navigate, useNavigate } from 'react-router-dom'
-import { getChatMessages, getStoredUser, getUniqueRegisteredUsers, saveChatMessages, syncRegisteredUsers } from '../utils/appData'
+import { getChatMessages, getHiredChatContacts, getStoredUser, saveChatMessages, syncRegisteredUsers } from '../utils/appData'
 
 const accentPalette = ['purple', 'cyan', 'green', 'amber', 'rose', 'slate']
 
@@ -13,10 +13,10 @@ export default function TeacherChatPage() {
   const attachmentInputRef = useRef(null)
   const imageInputRef = useRef(null)
   const [messagesByChat, setMessagesByChat] = useState(() => getChatMessages())
-  const [registeredUsers, setRegisteredUsers] = useState(() => getUniqueRegisteredUsers())
+  const [registeredUsers, setRegisteredUsers] = useState([])
 
   useEffect(() => {
-    syncRegisteredUsers().then(setRegisteredUsers)
+    syncRegisteredUsers().then((users) => setRegisteredUsers(getHiredChatContacts(users)))
   }, [])
 
   useEffect(() => {
@@ -55,6 +55,7 @@ export default function TeacherChatPage() {
     { label: 'Job Board', to: '/teacher-job-board' },
     { label: 'My Applications', to: '/teacher-applications' },
     { label: 'Study Resources', to: '/teacher-resources' },
+    { label: 'Community Q&A', to: '/questions' },
     { label: 'Upload Resources', to: '/teacher-upload-resources' },
     { label: 'Chat', to: '/teacher-chat' },
     { label: 'Question Bank', to: '/quiz' },
@@ -186,7 +187,7 @@ export default function TeacherChatPage() {
 
             <div className="conversation-list">
               {conversations.length === 0 ? (
-                <div className="empty-chat-state">No other registered users yet.</div>
+                <div className="empty-chat-state">Chat unlocks after a student hires you.</div>
               ) : (
                 conversations.map((chat, index) => (
                   <button type="button" key={chat.id} className={`conversation-item ${index === selectedChat ? 'active' : ''}`} onClick={() => setSelectedChat(index)}>

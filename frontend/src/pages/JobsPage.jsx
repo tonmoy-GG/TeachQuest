@@ -74,6 +74,7 @@ export default function JobsPage() {
       salary: jobForm.salary.trim() || 'Negotiable',
       location: jobForm.location.trim() || 'Online',
       description: jobForm.description.trim() || 'No description provided.',
+      ownerEmail: user.email || '',
       studentGender: jobForm.studentGender || 'male',
       tutorGender: jobForm.tutorGender || 'any',
     }
@@ -162,14 +163,16 @@ export default function JobsPage() {
 
                 <div className="job-form-group">
                   <label htmlFor="subject">Subject</label>
-                  <select id="subject" className="job-input job-select" name="subject" value={jobForm.subject} onChange={handleChange} required>
-                    <option value="" disabled>Select a subject</option>
-                    <option value="Mathematics">Mathematics</option>
-                    <option value="Physics">Physics</option>
-                    <option value="Computer Science">Computer Science</option>
-                    <option value="Languages">Languages</option>
-                    <option value="Statistics">Statistics</option>
-                  </select>
+                  <input
+                    id="subject"
+                    className="job-input"
+                    name="subject"
+                    type="text"
+                    value={jobForm.subject}
+                    onChange={handleChange}
+                    placeholder="e.g. Calculus, Java, DSA, English"
+                    required
+                  />
                 </div>
 
                 <div className="job-form-group full-span">
@@ -189,7 +192,7 @@ export default function JobsPage() {
 
                 <div className="job-form-group">
                   <label htmlFor="location">Address / Location</label>
-                  <textarea id="location" className="job-input job-textarea job-textarea-small" name="location" rows="2" value={jobForm.location} onChange={handleChange} placeholder="Library room, cafe, or 'Online'" required />
+                  <textarea id="location" className="job-input job-textarea job-textarea-small" name="location" rows="2" value={jobForm.location} onChange={handleChange} placeholder="Mirpur, ECB, or 'Online'" required />
                 </div>
               </div>
             </div>
@@ -198,8 +201,8 @@ export default function JobsPage() {
               <h3>Preferences</h3>
               <div className="job-form-stack">
                 <div className="job-form-group">
-                  <label htmlFor="salary">Expected Salary / Rate ($/hr)</label>
-                  <input id="salary" className="job-input" name="salary" type="text" value={jobForm.salary} onChange={handleChange} placeholder="e.g. $15/hr or Negotiable" required />
+                  <label htmlFor="salary">Expected Salary / Rate (tk)</label>
+                  <input id="salary" className="job-input" name="salary" type="text" value={jobForm.salary} onChange={handleChange} placeholder="e.g. 5000tk or Negotiable" required />
                 </div>
 
                 <div className="job-form-two-col">

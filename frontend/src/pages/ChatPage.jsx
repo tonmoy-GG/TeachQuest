@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Navigate, useNavigate } from 'react-router-dom'
-import { getChatMessages, getStoredUser, getUniqueRegisteredUsers, navItems, saveChatMessages, syncRegisteredUsers } from '../utils/appData'
+import { getChatMessages, getHiredChatContacts, getStoredUser, navItems, saveChatMessages, syncRegisteredUsers } from '../utils/appData'
 
 const accentPalette = ['purple', 'cyan', 'green', 'amber', 'rose', 'slate']
 
@@ -13,10 +13,10 @@ export default function ChatPage() {
   const attachmentInputRef = useRef(null)
   const imageInputRef = useRef(null)
   const [messagesByChat, setMessagesByChat] = useState(() => getChatMessages())
-  const [registeredUsers, setRegisteredUsers] = useState(() => getUniqueRegisteredUsers())
+  const [registeredUsers, setRegisteredUsers] = useState([])
 
   useEffect(() => {
-    syncRegisteredUsers().then(setRegisteredUsers)
+    syncRegisteredUsers().then((users) => setRegisteredUsers(getHiredChatContacts(users)))
   }, [])
 
   useEffect(() => {
@@ -184,7 +184,7 @@ export default function ChatPage() {
 
             <div className="conversation-list">
               {conversations.length === 0 ? (
-                <div className="empty-chat-state">No other registered users yet.</div>
+                <div className="empty-chat-state">Chat unlocks after you hire a tutor.</div>
               ) : (
                 conversations.map((chat, index) => (
                   <button type="button" key={chat.id} className={`conversation-item ${index === selectedChat ? 'active' : ''}`} onClick={() => setSelectedChat(index)}>

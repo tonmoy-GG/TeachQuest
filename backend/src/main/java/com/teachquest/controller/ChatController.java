@@ -32,13 +32,19 @@ public class ChatController {
 
             Message sentMessage = chatService.sendMessage(message, file);
             return ResponseEntity.ok(sentMessage);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error sending message: " + e.getMessage());
         }
     }
 
     @GetMapping("/history")
-    public List<Message> getChatHistory(@RequestParam Long userId1, @RequestParam Long userId2) {
-        return chatService.getChatHistory(userId1, userId2);
+    public ResponseEntity<?> getChatHistory(@RequestParam Long userId1, @RequestParam Long userId2) {
+        try {
+            return ResponseEntity.ok(chatService.getChatHistory(userId1, userId2));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
     }
 }

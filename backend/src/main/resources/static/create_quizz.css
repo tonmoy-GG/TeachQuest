@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap');
+
+body {
+    font-family: 'Quantico';
+    margin: 0;
+    padding: 20px;
+    background-color: #f0f0f0;
+}
+
+/* Teach Quest text positioning */
+.teachquest-text {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: black;
+    text-decoration: none; /* Remove underline */
+}
+
+/* Quiz text outside of box, centered */
+.quiz-title {
+    position: absolute;
+    top: 70px; /* Adjust space from the top */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 30px;
+    font-weight: bold;
+    color: black;
+}
+
+/* Container positioning and styles */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    margin-top: 120px; /* Add margin to make space for Quiz title */
+}
+
+/* Top section styling for student name and ID */
+.top-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.top-section input {
+    width: 48%; /* Adjusted to fit two inputs side by side */
+    padding: 10px;
+    margin-right: 10px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+}
+
+.top-section input:last-child {
+    margin-right: 0; /* Remove right margin for the last input */
+}
+
+/* Question container styling */
+.question-container {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 3px;
+}
+
+.question-container .question {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.question-container .options {
+    list-style: none;
+    padding: 0;
+}
+
+.question-container .options li {
+    margin-bottom: 10px;
+}
+
+/* Correct option styling */
+.question-container label {
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+}
+
+.question-container select {
+    padding: 10px;
+    width: 100px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+}
+
+/* Button styling */
+.add-question-btn,
+.create-quiz-btn {
+    
+    color: black;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    display: block;
+    width: 200px;
+    margin: 10px auto;
+    font-weight: bold;
+}
+
+.create-quiz-btn {
+    background-color: #9AAEEF;
+}
+
+/* Display added questions */
+h3 {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 20px;
+}
+
+ul {
+    padding-left: 20px;
+}
+
+ul li {
+    margin-bottom: 15px;
+}

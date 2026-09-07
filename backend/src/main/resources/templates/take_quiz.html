@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Take Quiz - TeachQuest</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <script>
+        const quizId = new URLSearchParams(window.location.search).get('id');
+        let quizData = null;
+
+        async function fetchQuiz() {
+            if (!quizId) {
+                document.body.innerHTML = '<h1>Invalid Quiz ID</h1>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/quizzes/${quizId}`);
+                if (response.ok) {
+                    quizData = await response.json();
+                    renderQuiz();
+                } else {
+                    document.body.innerHTML = '<h1>Quiz not found</h1>';
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderQuiz() {
+            document.getElementById('quiz-title').textContent = quizData.title;
+            const container = document.getElementById('questions-container');
+
+            quizData.questions.forEach((q, index) => {
+                const div = document.createElement('div');
+                div.className = 'question-block';
+                div.innerHTML = `
+                    <p><strong>Q${index + 1}: ${q.question}</strong></p>
+                    ${q.options.map(opt => `
+                        <label>
+                            <input type="radio" name="q_${q.id}" value="${opt.optionLabel}">
+                            ${opt.optionLabel}) ${opt.optionText}
+                        </label><br>
+                    `).join('')}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function submitAnswers() {
+            const answers = {};
+            let answeredCount = 0;
+
+            quizData.questions.forEach(q => {
+                const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
+                if (selected) {
+                    answers[q.id] = selected.value;
+                    answeredCount++;
+                }
+            });
+
+            if (answeredCount < quizData.questions.length) {
+                if (!confirm("You haven't answered all questions. Submit anyway?")) return;
+            }
+
+            try {
+                const response = await fetch(`/api/quizzes/${quizId}/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(answers)
+                });
+
+                if (response.ok) {
+                    const score = await response.json();
+                    alert(`Quiz Submitted! Your Score: ${score}`);
+                    window.location.href = '/study-resources';
+                } else {
+                    alert("Submission failed.");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchQuiz);
+    </script>
+</head>
+
+<body>
+    <button onclick="window.history.back()" class="back-btn" title="Go Back">←</button>
+    <div class="container">
+        <h1 id="quiz-title">Loading Quiz...</h1>
+        <div id="questions-container"></div>
+        <button onclick="submitAnswers()" style="margin-top: 20px;">Submit Answers</button>
+    </div>
+</body>
+
+</html>

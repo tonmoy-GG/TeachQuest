@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutor Analytics - TeachQuest</title>
+    <link rel="stylesheet" th:href="@{/quiz_premium.css}">
+    <link rel="stylesheet" th:href="@{/tutor_analytics.css}">
+</head>
+
+<body>
+
+    <div class="dashboard-grid">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">TeachQuest</div>
+            <ul class="sidebar-menu">
+                <li class="menu-item" onclick="window.location.href='/teacher-dashboard'">📊 Dashboard</li>
+                <li class="menu-item active">📈 Analytics</li>
+                <li class="menu-item">👥 Students</li>
+                <li class="menu-item">📝 Quizzes</li>
+                <li class="menu-item">⚙️ Settings</li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <div class="page-header" style="margin: 0 0 30px 0;">
+                <div>
+                    <h2>Performance Analytics</h2>
+                    <p style="color: #666; margin:0;">Overview of student performance in "Data Structures"</p>
+                </div>
+                <div>
+                    <select style="padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                        <option>Last 7 Days</option>
+                        <option>Last 30 Days</option>
+                        <option>All Time</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Top Stats -->
+            <div class="card-grid-3">
+                <div class="analytic-card">
+                    <h4 style="margin-bottom: 10px; color: #777;">Avg. Quiz Score</h4>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent-purple);">78%</div>
+                    <div style="color: #2ed573; font-size: 0.9rem;">▲ 5% vs last week</div>
+                </div>
+                <div class="analytic-card">
+                    <h4 style="margin-bottom: 10px; color: #777;">Completion Rate</h4>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent-blue);">92%</div>
+                    <div style="color: #666; font-size: 0.9rem;">120/130 Students</div>
+                </div>
+                <div class="analytic-card">
+                    <h4 style="margin-bottom: 10px; color: #777;">Most Difficult Topic</h4>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #d35400;">Graph Theory</div>
+                    <div style="color: #d35400; font-size: 0.9rem;">Avg Score: 45%</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px;">
+                <!-- Score Distribution Chart -->
+                <div class="analytic-card">
+                    <h3>Score Distribution</h3>
+                    <div class="chart-container">
+                        <div class="bar" style="height: 10%;"><span>D</span></div>
+                        <div class="bar" style="height: 25%;"><span>C</span></div>
+                        <div class="bar" style="height: 50%; background: var(--accent-purple);"><span>B</span></div>
+                        <div class="bar" style="height: 15%;"><span>A</span></div>
+                    </div>
+                    <div style="text-align: center; margin-top: 10px; color: #777; font-size: 0.9rem;">Grade Ranges
+                    </div>
+                </div>
+
+                <!-- Difficult Questions List -->
+                <div class="analytic-card">
+                    <h3>Hardest Questions</h3>
+                    <ul style="list-style: none; margin-top: 15px;">
+                        <li style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                            <div style="font-weight: bold; font-size: 0.9rem;">Q5: Dijkstra's Algo</div>
+                            <div style="color: red; font-size: 0.8rem;">32% Accuracy</div>
+                        </li>
+                        <li style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                            <div style="font-weight: bold; font-size: 0.9rem;">Q12: Red-Black Trees</div>
+                            <div style="color: red; font-size: 0.8rem;">41% Accuracy</div>
+                        </li>
+                    </ul>
+                    <button class="btn btn-outline" style="width: 100%; font-size: 0.8rem;">View All</button>
+                </div>
+            </div>
+
+            <!-- Student Progress Table -->
+            <h3>Student Progress</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Quizzes Taken</th>
+                            <th>Avg Score</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-weight: bold;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 30px; height: 30px; border-radius: 50%; background: #ddd;"></div>
+                                    Sarah Jenkins
+                                </div>
+                            </td>
+                            <td>5/5</td>
+                            <td>92%</td>
+                            <td><span class="difficulty-badge diff-easy">Excellent</span></td>
+                            <td><button class="btn btn-secondary"
+                                    style="padding: 5px 10px; font-size: 0.8rem;">View</button></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 30px; height: 30px; border-radius: 50%; background: #ddd;"></div>
+                                    Mike Ross
+                                </div>
+                            </td>
+                            <td>3/5</td>
+                            <td>65%</td>
+                            <td><span class="difficulty-badge diff-medium">At Risk</span></td>
+                            <td><button class="btn btn-secondary"
+                                    style="padding: 5px 10px; font-size: 0.8rem;">View</button></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 30px; height: 30px; border-radius: 50%; background: #ddd;"></div>
+                                    Rahul Sharma
+                                </div>
+                            </td>
+                            <td>5/5</td>
+                            <td>88%</td>
+                            <td><span class="difficulty-badge diff-easy">Good</span></td>
+                            <td><button class="btn btn-secondary"
+                                    style="padding: 5px 10px; font-size: 0.8rem;">View</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+
+</html>

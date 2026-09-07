@@ -72,6 +72,7 @@ export default function TeacherApplicationsPage() {
     { label: 'Job Board', to: '/teacher-job-board' },
     { label: 'My Applications', to: '/teacher-applications' },
     { label: 'Study Resources', to: '/teacher-resources' },
+    { label: 'Community Q&A', to: '/questions' },
     { label: 'Upload Resources', to: '/teacher-upload-resources' },
     { label: 'Chat', to: '/teacher-chat' },
     { label: 'Question Bank', to: '/quiz' },

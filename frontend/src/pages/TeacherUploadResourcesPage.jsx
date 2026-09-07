@@ -7,6 +7,7 @@ const teacherNavItems = [
   { label: 'Job Board', to: '/teacher-job-board' },
   { label: 'My Applications', to: '/teacher-applications' },
   { label: 'Study Resources', to: '/teacher-resources' },
+  { label: 'Community Q&A', to: '/questions' },
   { label: 'Upload Resources', to: '/teacher-upload-resources' },
   { label: 'Chat', to: '/teacher-chat' },
   { label: 'Question Bank', to: '/quiz' },
@@ -14,9 +15,16 @@ const teacherNavItems = [
 
 export default function TeacherUploadResourcesPage() {
   const navigate = useNavigate()
-  const [user, setUser] = useState(() => getStoredUser())
+  const [user] = useState(() => getStoredUser())
   const [isDragging, setIsDragging] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
+  const [formData, setFormData] = useState({
+    department: '',
+    category: '',
+    trimester: '',
+    course: '',
+    description: '',
+  })
 
   useEffect(() => {
     const currentUser = getStoredUser()
@@ -30,7 +38,6 @@ export default function TeacherUploadResourcesPage() {
       return
     }
 
-    setUser(currentUser)
   }, [navigate])
 
   if (!user) {
@@ -49,6 +56,34 @@ export default function TeacherUploadResourcesPage() {
     setIsDragging(false)
     const file = event.dataTransfer.files?.[0]
     setSelectedFile(file || null)
+  }
+
+  const handleInputChange = (event) => {
+    const { id, value } = event.target
+    setFormData((prev) => ({ ...prev, [id]: value }))
+  }
+
+  const handleUpload = () => {
+    if (!formData.department || !formData.category || !formData.trimester || !formData.course || !selectedFile) {
+      alert('Please complete all fields and choose a file before uploading.')
+      return
+    }
+
+    const payload = new FormData()
+    payload.append('department', formData.department === 'cse' ? 'Computer Science' : formData.department === 'eee' ? 'Electrical Engineering' : 'Business Administration')
+    payload.append('category', formData.category)
+    payload.append('semester', formData.trimester)
+    payload.append('courseCode', formData.course)
+    payload.append('description', formData.description || 'Uploaded resource')
+    payload.append('uploaderId', String(user.id))
+    payload.append('file', selectedFile)
+
+    fetch('/api/resources/upload', { method: 'POST', body: payload })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(await response.text() || 'Upload failed.')
+        navigate('/teacher-resources')
+      })
+      .catch((error) => alert(error.message))
   }
 
   return (
@@ -103,7 +138,7 @@ export default function TeacherUploadResourcesPage() {
           <div className="upload-form-stack">
             <div className="upload-field-group">
               <label htmlFor="department">Select Department</label>
-              <select id="department" defaultValue="">
+              <select id="department" value={formData.department} onChange={handleInputChange}>
                 <option value="" disabled>Select Department</option>
                 <option value="cse">Computer Science</option>
                 <option value="eee">Electrical Engineering</option>
@@ -113,7 +148,7 @@ export default function TeacherUploadResourcesPage() {
 
             <div className="upload-field-group">
               <label htmlFor="category">Select Category</label>
-              <select id="category" defaultValue="">
+              <select id="category" value={formData.category} onChange={handleInputChange}>
                 <option value="" disabled>Select Category</option>
                 <option value="notes">Class Notes</option>
                 <option value="recording">Class Recording</option>
@@ -123,7 +158,7 @@ export default function TeacherUploadResourcesPage() {
 
             <div className="upload-field-group">
               <label htmlFor="trimester">Select Trimester/Semester</label>
-              <select id="trimester" defaultValue="">
+              <select id="trimester" value={formData.trimester} onChange={handleInputChange}>
                 <option value="" disabled>Select Trimester</option>
                 {trimesterOptions.map((option) => (
                   <option key={option} value={option}>{option}</option>
@@ -133,7 +168,7 @@ export default function TeacherUploadResourcesPage() {
 
             <div className="upload-field-group">
               <label htmlFor="course">Course Code</label>
-              <select id="course" defaultValue="">
+              <select id="course" value={formData.course} onChange={handleInputChange}>
                 <option value="" disabled>Select Course Code</option>
                 <option value="CSE3711">CSE3711</option>
                 <option value="CSE3721">CSE3721</option>
@@ -143,7 +178,7 @@ export default function TeacherUploadResourcesPage() {
 
             <div className="upload-field-group">
               <label htmlFor="description">Description</label>
-              <textarea id="description" rows="5" placeholder="Add context about the resource, topic coverage, or exam preparation notes..." />
+              <textarea id="description" rows="5" value={formData.description} onChange={handleInputChange} placeholder="Add context about the resource, topic coverage, or exam preparation notes..." />
             </div>
           </div>
 
@@ -174,7 +209,7 @@ export default function TeacherUploadResourcesPage() {
           </div>
 
           <div className="upload-submit-row">
-            <button type="button" className="primary-soft-button upload-submit-btn">Upload File</button>
+            <button type="button" className="primary-soft-button upload-submit-btn" onClick={handleUpload}>Upload File</button>
           </div>
         </section>
       </main>
