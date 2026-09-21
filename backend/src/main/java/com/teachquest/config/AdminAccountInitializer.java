@@ -2,6 +2,7 @@ package com.teachquest.config;
 
 import com.teachquest.model.User;
 import com.teachquest.repository.UserRepository;
+import com.teachquest.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,10 +12,12 @@ import org.springframework.stereotype.Component;
 public class AdminAccountInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final UserService userService;
 
-    public AdminAccountInitializer(UserRepository userRepository, JdbcTemplate jdbcTemplate) {
+    public AdminAccountInitializer(UserRepository userRepository, JdbcTemplate jdbcTemplate, UserService userService) {
         this.userRepository = userRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.userService = userService;
     }
 
     @Value("${teachquest.admin.seed.enabled:true}")
@@ -38,25 +41,23 @@ public class AdminAccountInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         widenUserTypeColumnIfNeeded();
-        if (!seedEnabled || userRepository.findByEmailIgnoreCase(email).stream().anyMatch(this::isAdmin)) return;
+        if (seedEnabled && userRepository.findByEmailIgnoreCase(email).isEmpty()) {
+            User admin = new User();
+            admin.setUsername(username);
+            admin.setUniversityId(universityId);
+            admin.setContactNo(contactNo);
+            admin.setPassword(password);
+            admin.setEmail(email);
+            admin.setAddress("TeachQuest administration");
+            admin.setUserType("admin");
+            admin.setStatus("ACTIVE");
+            userRepository.save(admin);
+        }
 
-        User admin = new User();
-        admin.setUsername(username);
-        admin.setUniversityId(universityId);
-        admin.setContactNo(contactNo);
-        admin.setPassword(password);
-        admin.setEmail(email);
-        admin.setAddress("TeachQuest administration");
-        admin.setUserType("admin");
-        admin.setStatus("ACTIVE");
-        userRepository.save(admin);
+        userService.seedDemoAccountsIfMissing();
     }
 
     private void widenUserTypeColumnIfNeeded() {
         jdbcTemplate.execute("ALTER TABLE registration MODIFY COLUMN user_type VARCHAR(20) NOT NULL");
-    }
-
-    private boolean isAdmin(User user) {
-        return "admin".equalsIgnoreCase(user.getUserType());
     }
 }
