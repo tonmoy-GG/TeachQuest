@@ -16,31 +16,33 @@ public class UserService {
 
     @Transactional
     public User registerUser(User user) throws Exception {
-        // Check if email already exists
-        if (!userRepository.findByEmail(user.getEmail()).isEmpty()) {
+        if (user == null) {
+            throw new Exception("User details are required.");
+        }
+
+        String email = normalizeEmail(user.getEmail());
+        String username = normalizeUsername(user.getUsername());
+        if (email == null || email.isBlank()) {
+            throw new Exception("Email is required.");
+        }
+        if (username == null || username.isBlank()) {
+            throw new Exception("Username is required.");
+        }
+
+        if (!userRepository.findByEmailIgnoreCase(email).isEmpty()) {
             throw new Exception("Email already exists!");
         }
 
-        // Check if username already exists
-        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+        if (userRepository.findByUsernameIgnoreCase(username).isPresent()) {
             throw new Exception("Username already exists!");
         }
 
-        // In a real application, you should hash the password here.
-        // For now, we'll keep it simple as we don't have Spring Security configured
-        // yet.
-        // user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        // Ensure address is not null if it wasn't provided (though DB allows it)
-        if (user.getAddress() == null) {
-            user.setAddress("");
-        }
-
-        if (user.getUserType() == null || "admin".equalsIgnoreCase(user.getUserType())) {
-            user.setUserType("student");
-        } else if ("tutor".equalsIgnoreCase(user.getUserType())) {
-            user.setUserType("teacher");
-        }
+        String normalizedUserType = normalizeUserType(user.getUserType());
+        user.setEmail(email);
+        user.setUsername(username);
+        user.setPassword(user.getPassword() == null ? "" : user.getPassword().trim());
+        user.setAddress(user.getAddress() == null ? "" : user.getAddress().trim());
+        user.setUserType(normalizedUserType);
         user.setStatus("ACTIVE");
 
         return userRepository.save(user);
@@ -90,5 +92,44 @@ public class UserService {
 
     public java.util.List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    public void seedDemoAccountsIfMissing() {
+        createDemoUserIfMissing("student1@gmail.com", "student1", "student", "student123", "STUDENT001", "01700000001", "Demo Student Street");
+        createDemoUserIfMissing("teacher1@gmail.com", "teacher1", "teacher", "teacher123", "TEACHER001", "01700000002", "Demo Teacher Street");
+    }
+
+    private void createDemoUserIfMissing(String email, String username, String userType, String password, String universityId, String contactNo, String address) {
+        if (userRepository.findByEmailIgnoreCase(email).isEmpty() && userRepository.findByUsernameIgnoreCase(username).isEmpty()) {
+            User user = new User();
+            user.setEmail(email);
+            user.setUsername(username);
+            user.setUserType(userType);
+            user.setPassword(password);
+            user.setUniversityId(universityId);
+            user.setContactNo(contactNo);
+            user.setAddress(address);
+            user.setStatus("ACTIVE");
+            userRepository.save(user);
+        }
+    }
+
+    private String normalizeEmail(String value) {
+        if (value == null) return null;
+        return value.trim().toLowerCase();
+    }
+
+    private String normalizeUsername(String value) {
+        if (value == null) return null;
+        return value.trim();
+    }
+
+    private String normalizeUserType(String value) {
+        if (value == null || value.isBlank()) return "student";
+        String normalized = value.trim().toLowerCase();
+        if ("tutor".equals(normalized) || "teacher".equals(normalized)) return "teacher";
+        if ("job_poster".equals(normalized) || "jobposter".equals(normalized) || "job poster".equals(normalized)) return "jobposter";
+        if ("admin".equals(normalized)) return "student";
+        return "student";
     }
 }

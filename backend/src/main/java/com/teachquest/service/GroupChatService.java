@@ -71,7 +71,12 @@ public class GroupChatService {
     @Transactional(readOnly = true)
     public List<MemberView> getEligibleStudents(Long tutorId) {
         requireTeacher(tutorId);
-        return jobPostRepository.findStudentIdsByHiredTutorId(tutorId).stream()
+
+        java.util.Set<Long> studentIds = new java.util.LinkedHashSet<>();
+        studentIds.addAll(jobPostRepository.findStudentIdsByHiredTutorId(tutorId));
+        studentIds.addAll(jobPostRepository.findStudentIdsByHiredTutorIdFromApplications(tutorId));
+
+        return studentIds.stream()
                 .map(userRepository::findById)
                 .filter(java.util.Optional::isPresent)
                 .map(java.util.Optional::get)
@@ -129,7 +134,9 @@ public class GroupChatService {
         if (!"student".equalsIgnoreCase(student.getUserType())) {
             throw new IllegalArgumentException("Only student accounts can join a group.");
         }
-        if (!jobPostRepository.existsByUserIdAndHiredTutorId(studentId, tutor.getId())) {
+        boolean hired = jobPostRepository.existsByUserIdAndHiredTutorId(studentId, tutor.getId())
+                || jobPostRepository.existsByUserIdAndHiredTutorIdViaApplication(studentId, tutor.getId());
+        if (!hired) {
             throw new IllegalArgumentException("This student has not hired this tutor.");
         }
         if (memberRepository.findByGroupIdAndUserId(group.getId(), studentId).isEmpty()) {

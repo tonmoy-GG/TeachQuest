@@ -107,7 +107,9 @@ public class AuthoredQuizService {
         }
         for (Long studentId : command.studentIds().stream().filter(Objects::nonNull).distinct().collect(Collectors.toList())) {
             User student = userRepository.findById(studentId).orElseThrow(() -> new IllegalArgumentException("Student account was not found."));
-            if (!"student".equalsIgnoreCase(student.getUserType()) || !jobPostRepository.existsByUserIdAndHiredTutorId(studentId, tutorId)) {
+            boolean hired = jobPostRepository.existsByUserIdAndHiredTutorId(studentId, tutorId)
+                    || jobPostRepository.existsByUserIdAndHiredTutorIdViaApplication(studentId, tutorId);
+            if (!"student".equalsIgnoreCase(student.getUserType()) || !hired) {
                 throw new IllegalArgumentException("Every selected student must have hired this tutor.");
             }
             saveAssignment(quizId, studentId, null, "STUDENT");
