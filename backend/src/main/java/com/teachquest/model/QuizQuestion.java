@@ -26,6 +26,12 @@ public class QuizQuestion {
     @Column(name = "q_cat", nullable = true, length = 100)
     private String qCategory;
 
+    @Column(name = "question_type", nullable = false, length = 30)
+    private String questionType = "SHORT_ANSWER";
+
+    @Column(columnDefinition = "TEXT")
+    private String explanation;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiz_id", nullable = true)
     @JsonIgnore
@@ -95,6 +101,11 @@ public class QuizQuestion {
         options.remove(option);
         option.setQuizQuestion(null);
     }
+
+    public String getQuestionType() { return questionType; }
+    public void setQuestionType(String questionType) { this.questionType = questionType; }
+    public String getExplanation() { return explanation; }
+    public void setExplanation(String explanation) { this.explanation = explanation; }
 }
 package com.teachquest.model;
 

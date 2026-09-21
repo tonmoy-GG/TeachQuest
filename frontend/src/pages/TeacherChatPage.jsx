@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Navigate, useNavigate } from 'react-router-dom'
-import { getChatMessages, getHiredChatContacts, getStoredUser, saveChatMessages, syncRegisteredUsers } from '../utils/appData'
+import { getChatMessages, getHiredChatContacts, getStoredUser, parseResponse, saveChatMessages, syncRegisteredUsers } from '../utils/appData'
+import GroupChatPanel from '../components/GroupChatPanel'
 
 const accentPalette = ['purple', 'cyan', 'green', 'amber', 'rose', 'slate']
 
@@ -50,6 +51,7 @@ export default function TeacherChatPage() {
 
   const displayName = user.username || user.email?.split('@')[0] || 'Teacher'
   const currentUserEmail = (user.email || '').trim().toLowerCase()
+  const currentUserId = Number(user?.id) || null
   const teacherNavItems = [
     { label: 'Dashboard', to: '/teacher-dashboard' },
     { label: 'Job Board', to: '/teacher-job-board' },
@@ -58,7 +60,7 @@ export default function TeacherChatPage() {
     { label: 'Community Q&A', to: '/questions' },
     { label: 'Upload Resources', to: '/teacher-upload-resources' },
     { label: 'Chat', to: '/teacher-chat' },
-    { label: 'Question Bank', to: '/quiz' },
+    { label: 'Create Quiz', to: '/quiz' },
   ]
 
   const conversations = registeredUsers
@@ -69,7 +71,7 @@ export default function TeacherChatPage() {
     })
     .slice(0, 8)
     .map((member, index) => ({
-      id: member.email || `teacher-contact-${index}`,
+      id: member.id || member.email || `teacher-contact-${index}`,
       name: member.username || 'Unknown User',
       role: member.userType === 'teacher' ? 'Teacher' : 'Student',
       time: index % 4 === 0 ? '2m ago' : index % 4 === 1 ? '18m ago' : index % 4 === 2 ? '1h ago' : 'Yesterday',
@@ -83,6 +85,58 @@ export default function TeacherChatPage() {
   const activeChat = conversations[Math.min(selectedChat, Math.max(conversations.length - 1, 0))] || null
   const activeRoomKey = activeChat ? buildRoomKey(currentUserEmail, activeChat.email) : ''
 
+  const normalizeServerMessages = (messages, otherEmail) => (Array.isArray(messages) ? messages.map((message) => {
+    const senderId = Number(message.senderId)
+    const isOutgoing = senderId === currentUserId
+    const filePath = message.filePath || ''
+    const attachment = filePath
+      ? {
+          name: message.fileName || 'Attachment',
+          type: 'application/octet-stream',
+          dataUrl: filePath.startsWith('http') ? filePath : `/${filePath.replace(/^\/+/, '')}`,
+          size: 0,
+        }
+      : null
+
+    return {
+      senderEmail: isOutgoing ? currentUserEmail : (otherEmail || ''),
+      text: message.message && message.message !== '[File Attachment]' ? message.message : '',
+      time: message.timestamp ? new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'Now',
+      attachment,
+    }
+  }) : [])
+
+  const loadDirectChat = async (contact) => {
+    if (!contact || !currentUserId || !contact.id || Number(contact.id) === currentUserId) return
+
+    try {
+      const response = await fetch(`/api/chat/history?userId1=${currentUserId}&userId2=${contact.id}`)
+      if (!response.ok) throw new Error('Unable to load chat history')
+
+      const data = await parseResponse(response)
+      const normalized = normalizeServerMessages(data, (contact.email || '').trim().toLowerCase())
+      const nextMap = { ...messagesByChat, [activeRoomKey]: normalized }
+      saveChatMessages(nextMap)
+      setMessagesByChat(nextMap)
+    } catch {
+      const nextMap = { ...messagesByChat }
+      if (!nextMap[activeRoomKey]) {
+        nextMap[activeRoomKey] = [
+          { side: 'incoming', text: `Hi ${displayName.split(' ')[0]}! I’m available for your ${activeChat.role === 'Teacher' ? 'teaching' : 'study'} request this week.`, time: '9:42 AM' },
+          { side: 'outgoing', text: `Thanks! I’ll review the details and send the topic list shortly.`, time: '9:44 AM' },
+          { side: 'incoming', text: `Perfect. I can also share the schedule and notes if needed.`, time: '9:46 AM' },
+        ]
+      }
+      saveChatMessages(nextMap)
+      setMessagesByChat(nextMap)
+    }
+  }
+
+  useEffect(() => {
+    if (!activeChat) return
+    void loadDirectChat(activeChat)
+  }, [activeChat, currentUserId])
+
   const activeMessages = activeChat ? (messagesByChat[activeRoomKey] || [
     { side: 'incoming', text: `Hi ${displayName.split(' ')[0]}! I’m available for your ${activeChat.role === 'Teacher' ? 'teaching' : 'study'} request this week.`, time: '9:42 AM' },
     { side: 'outgoing', text: `Thanks! I’ll review the details and send the topic list shortly.`, time: '9:44 AM' },
@@ -91,37 +145,68 @@ export default function TeacherChatPage() {
 
   const chatMessages = activeChat ? messagesByChat[activeRoomKey] || activeMessages : []
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!activeChat || (!draft.trim() && !pendingAttachment)) return
 
-    const nextMessage = {
-      senderEmail: currentUserEmail,
-      text: draft.trim(),
-      time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
-      attachment: pendingAttachment,
-    }
+    const formData = new FormData()
+    formData.append('senderId', String(currentUserId))
+    formData.append('receiverId', String(activeChat.id))
+    if (draft.trim()) formData.append('message', draft.trim())
+    if (pendingAttachment) formData.append('file', pendingAttachment)
 
-    const nextMap = {
-      ...messagesByChat,
-      [activeRoomKey]: [...(messagesByChat[activeRoomKey] || []), nextMessage],
-    }
+    try {
+      const response = await fetch('/api/chat/send', { method: 'POST', body: formData })
+      const data = await parseResponse(response)
+      if (!response.ok) throw new Error(typeof data === 'string' ? data : data?.message || 'Unable to send message')
 
-    saveChatMessages(nextMap)
-    setMessagesByChat(nextMap)
-    setDraft('')
-    setPendingAttachment(null)
+      const nextMap = {
+        ...messagesByChat,
+        [activeRoomKey]: [...(messagesByChat[activeRoomKey] || []), {
+          senderEmail: currentUserEmail,
+          text: draft.trim(),
+          time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+          attachment: pendingAttachment ? {
+            name: pendingAttachment.name,
+            type: pendingAttachment.type || 'application/octet-stream',
+            size: pendingAttachment.size,
+            dataUrl: pendingAttachment.type?.startsWith('image/') ? URL.createObjectURL(pendingAttachment) : '',
+          } : null,
+        }],
+      }
+
+      saveChatMessages(nextMap)
+      setMessagesByChat(nextMap)
+      setDraft('')
+      setPendingAttachment(null)
+
+      await loadDirectChat(activeChat)
+    } catch (error) {
+      const nextMap = {
+        ...messagesByChat,
+        [activeRoomKey]: [...(messagesByChat[activeRoomKey] || []), {
+          senderEmail: currentUserEmail,
+          text: draft.trim(),
+          time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+          attachment: pendingAttachment ? {
+            name: pendingAttachment.name,
+            type: pendingAttachment.type || 'application/octet-stream',
+            size: pendingAttachment.size,
+            dataUrl: pendingAttachment.type?.startsWith('image/') ? URL.createObjectURL(pendingAttachment) : '',
+          } : null,
+        }],
+      }
+      saveChatMessages(nextMap)
+      setMessagesByChat(nextMap)
+      setDraft('')
+      setPendingAttachment(null)
+    }
   }
 
   const handleFileSelected = (event) => {
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = () => {
-      setPendingAttachment({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl: reader.result })
-    }
-    reader.readAsDataURL(file)
+    setPendingAttachment(file)
   }
 
   const sharedMedia = [
@@ -170,6 +255,7 @@ export default function TeacherChatPage() {
       </header>
 
       <main className="dashboard-canvas chat-shell">
+        <GroupChatPanel user={user} isTeacher />
         <div className="chat-workspace glass-panel">
           <aside className="chat-sidebar">
             <div className="chat-sidebar-header">
@@ -178,11 +264,6 @@ export default function TeacherChatPage() {
                 <h2>Chats</h2>
               </div>
               <button type="button" className="chat-new-btn">New chat</button>
-            </div>
-
-            <div className="chat-search-box">
-              <span className="material-symbols-outlined">search</span>
-              <input type="text" placeholder="Search conversations" />
             </div>
 
             <div className="conversation-list">

@@ -10,4 +10,6 @@ import java.util.List;
 public interface ResourceFlagRepository extends JpaRepository<ResourceFlag, Long> {
     List<ResourceFlag> findByStatusOrderByCreatedAtDesc(String status);
     boolean existsByResourceIdAndReporterIdAndReason(Long resourceId, Long reporterId, String reason);
+
+    long countByStatus(String status);
 }

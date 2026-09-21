@@ -11,6 +11,10 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     List<Quiz> findByStudentId(String studentId);
 
     Quiz findByTitle(String title);
+
+    List<Quiz> findByAuthorId(Long authorId);
+
+    List<Quiz> findBySource(String source);
 }
 package com.teachquest.repository;
 

@@ -44,9 +44,12 @@ export default function LoginPage() {
         contactNo: data.contactNo || '',
         address: data.address || '',
         totalPoints: data.totalPoints || 0,
+        status: data.status || 'ACTIVE',
       }))
 
-      if ((data.userType || 'student') === 'teacher') {
+      if ((data.userType || 'student') === 'admin') {
+        navigate('/admin')
+      } else if ((data.userType || 'student') === 'teacher') {
         navigate('/teacher-dashboard')
       } else {
         navigate('/dashboard')
@@ -203,7 +206,7 @@ export default function LoginPage() {
           </form>
 
           <p className="switch-text">
-            New here? <Link to="/register">Create an account</Link>
+            New here? <Link to="/register">Create an account</Link> · <Link to="/admin/login">Admin sign in</Link>
           </p>
         </section>
       </div>

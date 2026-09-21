@@ -8,6 +8,7 @@ import javax.persistence.LockModeType;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Repository
 public interface StudyResourceRepository extends JpaRepository<StudyResource, Long> {
@@ -27,6 +28,10 @@ public interface StudyResourceRepository extends JpaRepository<StudyResource, Lo
     List<StudyResource> findByModerationStatusOrderByCreatedAtDesc(String moderationStatus);
 
     long countByUploaderId(Long uploaderId);
+
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    List<StudyResource> findByUploaderIdOrderByCreatedAtDesc(Long uploaderId);
 }
 package com.teachquest.repository;
 

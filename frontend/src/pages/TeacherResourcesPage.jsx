@@ -12,7 +12,7 @@ const teacherNavItems = [
   { label: 'Community Q&A', to: '/questions' },
   { label: 'Upload Resources', to: '/teacher-upload-resources' },
   { label: 'Chat', to: '/teacher-chat' },
-  { label: 'Question Bank', to: '/quiz' },
+  { label: 'Create Quiz', to: '/quiz' },
 ]
 
 export default function TeacherResourcesPage() {

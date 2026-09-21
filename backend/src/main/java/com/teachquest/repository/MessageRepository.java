@@ -12,6 +12,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     @Query("SELECT m FROM Message m WHERE (m.senderId = ?1 AND m.receiverId = ?2) OR (m.senderId = ?2 AND m.receiverId = ?1) ORDER BY m.timestamp ASC")
     List<Message> findChatHistory(Long userId1, Long userId2);
+
+    List<Message> findByGroupIdOrderByTimestampAsc(Long groupId);
 }
 package com.teachquest.repository;
 

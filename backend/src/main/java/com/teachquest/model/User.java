@@ -1,6 +1,7 @@
 package com.teachquest.model;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "registration")
@@ -34,7 +35,19 @@ public class User {
     @Column(name = "total_points", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
     private int totalPoints = 0;
 
+    @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false, length = 20, columnDefinition = "VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'")
+    private String status = "ACTIVE";
+
     public User() {
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (status == null || status.isBlank()) status = "ACTIVE";
     }
 
     public Long getId() {
@@ -108,6 +121,12 @@ public class User {
     public void setTotalPoints(int totalPoints) {
         this.totalPoints = totalPoints;
     }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }
 package com.teachquest.model;
 

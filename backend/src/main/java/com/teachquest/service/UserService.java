@@ -36,6 +36,13 @@ public class UserService {
             user.setAddress("");
         }
 
+        if (user.getUserType() == null || "admin".equalsIgnoreCase(user.getUserType())) {
+            user.setUserType("student");
+        } else if ("tutor".equalsIgnoreCase(user.getUserType())) {
+            user.setUserType("teacher");
+        }
+        user.setStatus("ACTIVE");
+
         return userRepository.save(user);
     }
 
@@ -58,6 +65,9 @@ public class UserService {
         System.err.println("DEBUG LOGIN: Found " + usersByEmail.size() + " candidates. Checking passwords...");
 
         for (User user : usersByEmail) {
+            if ("SUSPENDED".equalsIgnoreCase(user.getStatus())) {
+                throw new Exception("This account has been suspended.");
+            }
             String storedPass = (user.getPassword() != null) ? user.getPassword().trim() : "";
             String providedPass = (password != null) ? password.trim() : "";
 

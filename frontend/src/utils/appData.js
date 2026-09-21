@@ -345,6 +345,58 @@ export function getAllPostedJobs() {
   }
 }
 
+export async function syncLocalHiresToBackend() {
+  const usersByEmail = new Map(getRegisteredUsers().map((user) => [String(user.email || '').trim().toLowerCase(), user]))
+
+  for (const key of Object.keys(localStorage)) {
+    if (!key.startsWith(`${POSTED_JOBS_KEY}_`) && key !== POSTED_JOBS_KEY) continue
+
+    let jobs
+    try {
+      jobs = JSON.parse(localStorage.getItem(key) || '[]')
+    } catch {
+      continue
+    }
+    if (!Array.isArray(jobs)) continue
+
+    let changed = false
+    for (const job of jobs) {
+      if (job.backendId || !job.ownerEmail) continue
+      const owner = usersByEmail.get(String(job.ownerEmail).trim().toLowerCase())
+      const hiredApplicant = (job.applicants || []).find((applicant) => String(applicant.status || '').toLowerCase() === 'hired')
+      const tutor = usersByEmail.get(String(hiredApplicant?.email || '').trim().toLowerCase())
+      if (!owner?.id || !tutor?.id) continue
+
+      try {
+        const response = await fetch('/api/jobs/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: job.title || 'Tutor Request',
+            subject: job.subject || 'General',
+            days: Number.parseInt(job.daysPerWeek, 10) || 1,
+            requirements: job.description || 'No description provided.',
+            address: job.location || 'Online',
+            salary: job.salary || 'Negotiable',
+            studentGender: job.studentGender || 'any',
+            tutorGender: job.tutorGender || 'any',
+            userId: owner.id,
+            hiredTutorId: tutor.id,
+          }),
+        })
+        if (!response.ok) continue
+        const savedJob = await response.json()
+        job.backendId = savedJob.id
+        changed = true
+      } catch {
+        // Keep the local hire intact and retry on the next chat load.
+      }
+    }
+
+    if (changed) localStorage.setItem(key, JSON.stringify(jobs))
+  }
+}
+
 export function findPostedJobStorageKey(jobId) {
   const targetId = String(jobId)
 

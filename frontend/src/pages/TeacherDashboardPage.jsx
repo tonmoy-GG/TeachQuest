@@ -10,7 +10,7 @@ const teacherNavItems = [
   { label: 'Community Q&A', to: '/questions' },
   { label: 'Upload Resources', to: '/teacher-upload-resources' },
   { label: 'Chat', to: '/teacher-chat' },
-  { label: 'Question Bank', to: '/quiz' },
+  { label: 'Create Quiz', to: '/quiz' },
 ]
 
 export default function TeacherDashboardPage() {
@@ -55,7 +55,7 @@ export default function TeacherDashboardPage() {
     { title: 'Study Resources', description: 'Access curated notes, course files, and learning material.', icon: 'library_books', to: '/teacher-resources', accent: 'soft' },
     { title: 'Upload Resources', description: 'Share study material with students and peers.', icon: 'upload_file', to: '/teacher-upload-resources', accent: 'outline' },
     { title: 'Live Chat', description: 'Continue conversations with students and coordinators.', icon: 'forum', to: '/teacher-chat', accent: 'soft' },
-    { title: 'Question Bank', description: 'Practice and review course questions for better support.', icon: 'quiz', to: '/quiz', accent: 'soft' },
+    { title: 'Create Quiz', description: 'Write, assign, and review quizzes for your students.', icon: 'quiz', to: '/quiz', accent: 'soft' },
   ]
 
   const currentTeacherEmail = (user?.email || '').trim().toLowerCase()
