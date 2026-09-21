@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Navigate, useNavigate } from 'react-router-dom'
-import { getChatMessages, getHiredChatContacts, getStoredUser, navItems, saveChatMessages, syncRegisteredUsers } from '../utils/appData'
+import { getChatMessages, getHiredChatContacts, getStoredUser, navItems, parseResponse, saveChatMessages, syncRegisteredUsers } from '../utils/appData'
 import GroupChatPanel from '../components/GroupChatPanel'
 
 const accentPalette = ['purple', 'cyan', 'green', 'amber', 'rose', 'slate']
@@ -45,6 +45,7 @@ export default function ChatPage() {
 
   const displayName = user.username || user.email?.split('@')[0] || 'Alex'
   const currentUserEmail = (user.email || '').trim().toLowerCase()
+  const currentUserId = Number(user?.id) || null
   const conversations = registeredUsers
     .filter((member) => {
       const memberEmail = (member.email || '').trim().toLowerCase()
@@ -53,7 +54,7 @@ export default function ChatPage() {
     })
     .slice(0, 8)
     .map((member, index) => ({
-      id: member.email || `contact-${index}`,
+      id: member.id || member.email || `contact-${index}`,
       name: member.username || 'Unknown User',
       role: member.userType === 'teacher' ? 'Teacher' : 'Student',
       time: index % 4 === 0 ? '2m ago' : index % 4 === 1 ? '18m ago' : index % 4 === 2 ? '1h ago' : 'Yesterday',
@@ -67,6 +68,58 @@ export default function ChatPage() {
   const activeChat = conversations[Math.min(selectedChat, Math.max(conversations.length - 1, 0))] || null
   const activeRoomKey = activeChat ? buildRoomKey(currentUserEmail, activeChat.email) : ''
 
+  const normalizeServerMessages = (messages, otherEmail) => (Array.isArray(messages) ? messages.map((message) => {
+    const senderId = Number(message.senderId)
+    const isOutgoing = senderId === currentUserId
+    const filePath = message.filePath || ''
+    const attachment = filePath
+      ? {
+          name: message.fileName || 'Attachment',
+          type: 'application/octet-stream',
+          dataUrl: filePath.startsWith('http') ? filePath : `/${filePath.replace(/^\/+/, '')}`,
+          size: 0,
+        }
+      : null
+
+    return {
+      senderEmail: isOutgoing ? currentUserEmail : (otherEmail || ''),
+      text: message.message && message.message !== '[File Attachment]' ? message.message : '',
+      time: message.timestamp ? new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'Now',
+      attachment,
+    }
+  }) : [])
+
+  const loadDirectChat = async (contact) => {
+    if (!contact || !currentUserId || !contact.id || Number(contact.id) === currentUserId) return
+
+    try {
+      const response = await fetch(`/api/chat/history?userId1=${currentUserId}&userId2=${contact.id}`)
+      if (!response.ok) throw new Error('Unable to load chat history')
+
+      const data = await parseResponse(response)
+      const normalized = normalizeServerMessages(data, (contact.email || '').trim().toLowerCase())
+      const nextMap = { ...messagesByChat, [activeRoomKey]: normalized }
+      saveChatMessages(nextMap)
+      setMessagesByChat(nextMap)
+    } catch {
+      const nextMap = { ...messagesByChat }
+      if (!nextMap[activeRoomKey]) {
+        nextMap[activeRoomKey] = [
+          { side: 'incoming', text: `Hi ${displayName.split(' ')[0]}! I’m available for your ${activeChat.role === 'Teacher' ? 'tutoring' : 'study'} session this week.`, time: '9:42 AM' },
+          { side: 'outgoing', text: `Perfect! I’ll review the materials and send you the topic list before our session.`, time: '9:44 AM' },
+          { side: 'incoming', text: `Great. I can also share notes and the expected schedule if you want.`, time: '9:46 AM' },
+        ]
+      }
+      saveChatMessages(nextMap)
+      setMessagesByChat(nextMap)
+    }
+  }
+
+  useEffect(() => {
+    if (!activeChat) return
+    void loadDirectChat(activeChat)
+  }, [activeChat, currentUserId])
+
   const threadMessages = activeChat
     ? (messagesByChat[activeRoomKey] || [
         { side: 'incoming', text: `Hi ${displayName.split(' ')[0]}! I’m available for your ${activeChat.role === 'Teacher' ? 'tutoring' : 'study'} session this week.`, time: '9:42 AM' },
@@ -75,37 +128,68 @@ export default function ChatPage() {
       ])
     : []
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!activeChat || (!draft.trim() && !pendingAttachment)) return
 
-    const nextMessage = {
-      senderEmail: currentUserEmail,
-      text: draft.trim(),
-      time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
-      attachment: pendingAttachment,
-    }
+    const formData = new FormData()
+    formData.append('senderId', String(currentUserId))
+    formData.append('receiverId', String(activeChat.id))
+    if (draft.trim()) formData.append('message', draft.trim())
+    if (pendingAttachment) formData.append('file', pendingAttachment)
 
-    const nextMap = {
-      ...messagesByChat,
-      [activeRoomKey]: [...(messagesByChat[activeRoomKey] || []), nextMessage],
-    }
+    try {
+      const response = await fetch('/api/chat/send', { method: 'POST', body: formData })
+      const data = await parseResponse(response)
+      if (!response.ok) throw new Error(typeof data === 'string' ? data : data?.message || 'Unable to send message')
 
-    saveChatMessages(nextMap)
-    setMessagesByChat(nextMap)
-    setDraft('')
-    setPendingAttachment(null)
+      const nextMap = {
+        ...messagesByChat,
+        [activeRoomKey]: [...(messagesByChat[activeRoomKey] || []), {
+          senderEmail: currentUserEmail,
+          text: draft.trim(),
+          time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+          attachment: pendingAttachment ? {
+            name: pendingAttachment.name,
+            type: pendingAttachment.type || 'application/octet-stream',
+            size: pendingAttachment.size,
+            dataUrl: pendingAttachment.type?.startsWith('image/') ? URL.createObjectURL(pendingAttachment) : '',
+          } : null,
+        }],
+      }
+
+      saveChatMessages(nextMap)
+      setMessagesByChat(nextMap)
+      setDraft('')
+      setPendingAttachment(null)
+
+      await loadDirectChat(activeChat)
+    } catch (error) {
+      const nextMap = {
+        ...messagesByChat,
+        [activeRoomKey]: [...(messagesByChat[activeRoomKey] || []), {
+          senderEmail: currentUserEmail,
+          text: draft.trim(),
+          time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+          attachment: pendingAttachment ? {
+            name: pendingAttachment.name,
+            type: pendingAttachment.type || 'application/octet-stream',
+            size: pendingAttachment.size,
+            dataUrl: pendingAttachment.type?.startsWith('image/') ? URL.createObjectURL(pendingAttachment) : '',
+          } : null,
+        }],
+      }
+      saveChatMessages(nextMap)
+      setMessagesByChat(nextMap)
+      setDraft('')
+      setPendingAttachment(null)
+    }
   }
 
   const handleFileSelected = (event) => {
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = () => {
-      setPendingAttachment({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl: reader.result })
-    }
-    reader.readAsDataURL(file)
+    setPendingAttachment(file)
   }
 
   const sharedMedia = [
