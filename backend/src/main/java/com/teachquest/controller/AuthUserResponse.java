@@ -11,6 +11,7 @@ public class AuthUserResponse {
     private String address;
     private String userType;
     private int totalPoints;
+    private String status;
 
     public AuthUserResponse(User user) {
         this.id = user.getId();
@@ -21,6 +22,7 @@ public class AuthUserResponse {
         this.address = user.getAddress();
         this.userType = user.getUserType();
         this.totalPoints = user.getTotalPoints();
+        this.status = user.getStatus();
     }
 
     public Long getId() { return id; }
@@ -31,4 +33,5 @@ public class AuthUserResponse {
     public String getAddress() { return address; }
     public String getUserType() { return userType; }
     public int getTotalPoints() { return totalPoints; }
+    public String getStatus() { return status; }
 }

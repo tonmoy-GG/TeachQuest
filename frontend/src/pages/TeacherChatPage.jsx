@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Navigate, useNavigate } from 'react-router-dom'
 import { getChatMessages, getHiredChatContacts, getStoredUser, saveChatMessages, syncRegisteredUsers } from '../utils/appData'
+import GroupChatPanel from '../components/GroupChatPanel'
 
 const accentPalette = ['purple', 'cyan', 'green', 'amber', 'rose', 'slate']
 
@@ -58,7 +59,7 @@ export default function TeacherChatPage() {
     { label: 'Community Q&A', to: '/questions' },
     { label: 'Upload Resources', to: '/teacher-upload-resources' },
     { label: 'Chat', to: '/teacher-chat' },
-    { label: 'Question Bank', to: '/quiz' },
+    { label: 'Create Quiz', to: '/quiz' },
   ]
 
   const conversations = registeredUsers
@@ -170,6 +171,7 @@ export default function TeacherChatPage() {
       </header>
 
       <main className="dashboard-canvas chat-shell">
+        <GroupChatPanel user={user} isTeacher />
         <div className="chat-workspace glass-panel">
           <aside className="chat-sidebar">
             <div className="chat-sidebar-header">
@@ -178,11 +180,6 @@ export default function TeacherChatPage() {
                 <h2>Chats</h2>
               </div>
               <button type="button" className="chat-new-btn">New chat</button>
-            </div>
-
-            <div className="chat-search-box">
-              <span className="material-symbols-outlined">search</span>
-              <input type="text" placeholder="Search conversations" />
             </div>
 
             <div className="conversation-list">

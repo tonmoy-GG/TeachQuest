@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Navigate, useNavigate } from 'react-router-dom'
-import { getPostedJobs, getStoredUser, getUserScopedStorageKey, navItems, savePostedJobs, STORAGE_KEY, TEACHER_APPLICATIONS_KEY } from '../utils/appData'
+import { getPostedJobs, getRegisteredUsers, getStoredUser, getUserScopedStorageKey, navItems, savePostedJobs, STORAGE_KEY, syncLocalHiresToBackend, TEACHER_APPLICATIONS_KEY } from '../utils/appData'
 
 export default function PostedJobsPage() {
   const navigate = useNavigate()
@@ -39,8 +39,14 @@ export default function PostedJobsPage() {
     navigate(`/jobs?edit=${jobId}`)
   }
 
-  const handleHireApplicant = (jobId, applicantId, action = 'hire') => {
-    const nextJobs = getPostedJobs().map((job) => {
+  const handleHireApplicant = async (jobId, applicantId, action = 'hire') => {
+    const currentJobs = getPostedJobs()
+    const sourceJob = currentJobs.find((job) => String(job.id) === String(jobId))
+    const sourceApplicant = sourceJob?.applicants?.find((applicant) => String(applicant.email || applicant.id || applicant.name) === String(applicantId))
+    const registeredApplicant = getRegisteredUsers().find((candidate) => String(candidate.email || '').trim().toLowerCase() === String(sourceApplicant?.email || applicantId).trim().toLowerCase())
+    const backendJobId = sourceJob?.backendId || (String(jobId).match(/^\d+$/) ? jobId : null)
+
+    const nextJobs = currentJobs.map((job) => {
       if (String(job.id) !== String(jobId)) return job
 
       const nextApplicants = (job.applicants || []).map((applicant) => {
@@ -73,6 +79,18 @@ export default function PostedJobsPage() {
     savePostedJobs(nextJobs)
     localStorage.setItem(teacherApplicationsKey, JSON.stringify(syncedTeacherApplications))
     setJobs(nextJobs)
+
+    try {
+      if (backendJobId && registeredApplicant?.id) {
+        const endpoint = action === 'hire' ? '/api/applications/hire' : '/api/applications/reject'
+        const response = await fetch(`${endpoint}?jobId=${backendJobId}&tutorId=${registeredApplicant.id}`, { method: 'POST' })
+        if (!response.ok) throw new Error('The backend could not save this hiring decision.')
+      } else if (action === 'hire') {
+        await syncLocalHiresToBackend()
+      }
+    } catch (error) {
+      alert(error.message)
+    }
   }
 
   const displayName = user.username || user.email?.split('@')[0] || 'Alex'

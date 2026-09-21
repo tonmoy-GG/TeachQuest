@@ -14,14 +14,20 @@ public class Message {
     @Column(name = "sender_id", nullable = false)
     private Long senderId;
 
-    @Column(name = "receiver_id", nullable = false)
+    @Column(name = "receiver_id")
     private Long receiverId;
+
+    @Column(name = "group_id")
+    private Long groupId;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
     @Column(name = "file_path", length = 255)
     private String filePath;
+
+    @Column(name = "file_name", length = 255)
+    private String fileName;
 
     @Column(nullable = false, insertable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime timestamp;
@@ -53,6 +59,14 @@ public class Message {
         this.receiverId = receiverId;
     }
 
+    public Long getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(Long groupId) {
+        this.groupId = groupId;
+    }
+
     public String getMessage() {
         return message;
     }
@@ -67,6 +81,14 @@ public class Message {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     public LocalDateTime getTimestamp() {

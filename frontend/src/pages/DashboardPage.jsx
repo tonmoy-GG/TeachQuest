@@ -113,11 +113,6 @@ export default function DashboardPage() {
           ))}
         </nav>
 
-        <div className="dashboard-search-box">
-          <span className="material-symbols-outlined search-icon">search</span>
-          <input type="text" placeholder="Search tutors, courses, or resources..." />
-        </div>
-
         <div className="dashboard-top-actions">
           <button type="button" className="icon-button" aria-label="Notifications">
             <span className="material-symbols-outlined">notifications</span>

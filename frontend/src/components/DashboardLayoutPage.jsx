@@ -2,6 +2,17 @@ import { useEffect, useState } from 'react'
 import { NavLink, Navigate, useNavigate } from 'react-router-dom'
 import { getStoredUser, navItems } from '../utils/appData'
 
+const teacherNavItems = [
+  { label: 'Dashboard', to: '/teacher-dashboard' },
+  { label: 'Job Board', to: '/teacher-job-board' },
+  { label: 'My Applications', to: '/teacher-applications' },
+  { label: 'Study Resources', to: '/teacher-resources' },
+  { label: 'Community Q&A', to: '/questions' },
+  { label: 'Upload Resources', to: '/teacher-upload-resources' },
+  { label: 'Chat', to: '/teacher-chat' },
+  { label: 'Create Quiz', to: '/quiz' },
+]
+
 export default function DashboardLayoutPage({ title, buttonLabel, children }) {
   const navigate = useNavigate()
   const [user, setUser] = useState(() => getStoredUser())
@@ -20,6 +31,7 @@ export default function DashboardLayoutPage({ title, buttonLabel, children }) {
   }
 
   const displayName = user.username || user.email?.split('@')[0] || 'Alex'
+  const currentNavItems = user.userType === 'teacher' ? teacherNavItems : navItems
 
   return (
     <div className="student-dashboard-shell">
@@ -30,17 +42,12 @@ export default function DashboardLayoutPage({ title, buttonLabel, children }) {
         </div>
 
         <nav className="main-nav" aria-label="Main navigation">
-          {navItems.map((item) => (
+          {currentNavItems.map((item) => (
             <NavLink key={item.to} to={item.to} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
               {item.label}
             </NavLink>
           ))}
         </nav>
-
-        <div className="dashboard-search-box">
-          <span className="material-symbols-outlined search-icon">search</span>
-          <input type="text" placeholder="Search tutors, courses, or resources..." />
-        </div>
 
         <div className="dashboard-top-actions">
           <button type="button" className="icon-button" aria-label="Notifications">
@@ -79,7 +86,7 @@ export default function DashboardLayoutPage({ title, buttonLabel, children }) {
       <main className="dashboard-canvas dashboard-subpage">
         <header className="page-header-card">
           <div>
-            <span className="mini-label">Student dashboard</span>
+            <span className="mini-label">{user.userType === 'teacher' ? 'Tutor dashboard' : 'Student dashboard'}</span>
             <h2>{title}</h2>
           </div>
 

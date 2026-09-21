@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Navigate, useNavigate } from 'react-router-dom'
 import { getChatMessages, getHiredChatContacts, getStoredUser, navItems, saveChatMessages, syncRegisteredUsers } from '../utils/appData'
+import GroupChatPanel from '../components/GroupChatPanel'
 
 const accentPalette = ['purple', 'cyan', 'green', 'amber', 'rose', 'slate']
 
@@ -130,11 +131,6 @@ export default function ChatPage() {
           ))}
         </nav>
 
-        <div className="dashboard-search-box">
-          <span className="material-symbols-outlined search-icon">search</span>
-          <input type="text" placeholder="Search tutors, courses, or resources..." />
-        </div>
-
         <div className="dashboard-top-actions">
           <button type="button" className="icon-button" aria-label="Notifications">
             <span className="material-symbols-outlined">notifications</span>
@@ -167,6 +163,7 @@ export default function ChatPage() {
       </header>
 
       <main className="dashboard-canvas chat-shell">
+        <GroupChatPanel user={user} isTeacher={false} />
         <div className="chat-workspace glass-panel">
           <aside className="chat-sidebar">
             <div className="chat-sidebar-header">
@@ -175,11 +172,6 @@ export default function ChatPage() {
                 <h2>Chats</h2>
               </div>
               <button type="button" className="chat-new-btn">New chat</button>
-            </div>
-
-            <div className="chat-search-box">
-              <span className="material-symbols-outlined">search</span>
-              <input type="text" placeholder="Search conversations" />
             </div>
 
             <div className="conversation-list">

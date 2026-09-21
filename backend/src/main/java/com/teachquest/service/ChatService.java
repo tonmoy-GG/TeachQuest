@@ -29,6 +29,9 @@ public class ChatService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private GroupChatService groupChatService;
+
     private final String UPLOAD_DIR = "uploads/";
 
     public Message sendMessage(Message message, MultipartFile file) throws IOException {
@@ -48,6 +51,7 @@ public class ChatService {
                 Path filePath = uploadPath.resolve(uniqueFileName);
                 Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
                 message.setFilePath(UPLOAD_DIR + uniqueFileName);
+                message.setFileName(fileName);
                 message.setMessage("[File Attachment]"); // As per PHP logic
             } catch (IOException e) {
                 throw new IOException("Could not store file " + fileName, e);
@@ -60,6 +64,42 @@ public class ChatService {
     public List<Message> getChatHistory(Long userId1, Long userId2) {
         validateChatAccess(userId1, userId2);
         return messageRepository.findChatHistory(userId1, userId2);
+    }
+
+    public Message sendGroupMessage(Long groupId, Long senderId, String messageText, MultipartFile file) throws IOException {
+        groupChatService.requireMember(groupId, senderId);
+
+        Message message = new Message();
+        message.setSenderId(senderId);
+        message.setReceiverId(senderId);
+        message.setGroupId(groupId);
+        message.setMessage(messageText != null ? messageText : "");
+        storeAttachment(message, file);
+        return messageRepository.save(message);
+    }
+
+    public List<Message> getGroupHistory(Long groupId, Long userId) {
+        groupChatService.requireMember(groupId, userId);
+        return messageRepository.findByGroupIdOrderByTimestampAsc(groupId);
+    }
+
+    private void storeAttachment(Message message, MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) return;
+
+        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+        String uniqueFileName = System.currentTimeMillis() + "_" + fileName;
+        Path uploadPath = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(uploadPath)) Files.createDirectories(uploadPath);
+
+        try {
+            Path filePath = uploadPath.resolve(uniqueFileName);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            message.setFilePath(UPLOAD_DIR + uniqueFileName);
+            message.setFileName(fileName);
+            message.setMessage("[File Attachment]");
+        } catch (IOException e) {
+            throw new IOException("Could not store file " + fileName, e);
+        }
     }
 
     private void validateChatAccess(Long userId1, Long userId2) {

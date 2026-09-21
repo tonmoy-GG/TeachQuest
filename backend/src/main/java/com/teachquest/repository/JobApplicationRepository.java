@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface JobApplicationRepository extends JpaRepository<JobApplication, Long> {
+    long countByStatus(String status);
     List<JobApplication> findByJobId(Long jobId);
 
     List<JobApplication> findByTutorId(Long tutorId);

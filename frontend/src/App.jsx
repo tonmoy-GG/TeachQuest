@@ -17,6 +17,8 @@ import TeacherUploadResourcesPage from './pages/TeacherUploadResourcesPage'
 import TeacherChatPage from './pages/TeacherChatPage'
 import QuestionsPage from './pages/QuestionsPage'
 import AdminResourceModerationPage from './pages/AdminResourceModerationPage'
+import AdminDashboardPage from './pages/AdminDashboardPage'
+import AdminLoginPage from './pages/AdminLoginPage'
 
 function App() {
   return (
@@ -40,6 +42,8 @@ function App() {
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/questions" element={<QuestionsPage />} />
           <Route path="/admin/resources" element={<AdminResourceModerationPage />} />
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
         </Routes>
       </div>
     </BrowserRouter>
