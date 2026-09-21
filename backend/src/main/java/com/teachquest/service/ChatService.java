@@ -124,7 +124,9 @@ public class ChatService {
             throw new IllegalArgumentException("Chat is only available between a student and a teacher.");
         }
 
-        if (!jobPostRepository.existsByUserIdAndHiredTutorId(studentId, teacherId)) {
+        boolean hired = jobPostRepository.existsByUserIdAndHiredTutorId(studentId, teacherId)
+                || jobPostRepository.existsByUserIdAndHiredTutorIdViaApplication(studentId, teacherId);
+        if (!hired) {
             throw new IllegalArgumentException("Chat is available only after a tutor has been hired.");
         }
     }
