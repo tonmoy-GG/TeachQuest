@@ -32,6 +32,9 @@ public class StudyResource {
     @Column(name = "file_type", nullable = false)
     private String fileType;
 
+    @Column(name = "file_name", length = 255)
+    private String fileName;
+
     @Column(name = "is_external", nullable = false)
     private boolean isExternal = false;
 
@@ -118,6 +121,14 @@ public class StudyResource {
 
     public void setFileType(String fileType) {
         this.fileType = fileType;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     public boolean isExternal() {

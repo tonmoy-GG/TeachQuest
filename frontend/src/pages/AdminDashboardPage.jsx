@@ -130,7 +130,7 @@ export default function AdminDashboardPage() {
     <main className="admin-dashboard-shell">
       <header className="admin-dashboard-header">
         <div className="admin-brand"><div className="admin-brand-mark">TQ</div><div><span>TeachQuest</span><small>Administration workspace</small></div></div>
-        <div className="admin-header-actions"><span className="admin-user-chip"><span className="material-symbols-outlined">shield_person</span>{user.username}</span><button type="button" className="secondary-action-button" onClick={() => navigate('/dashboard')}>Exit admin</button></div>
+        <div className="admin-header-actions"><span className="admin-user-chip"><span className="material-symbols-outlined">shield_person</span>{user.username}</span><button type="button" className="secondary-action-button" onClick={() => navigate('/dashboard')}>Exit admin</button><button type="button" className="logout-button" onClick={() => { localStorage.removeItem('teachquest_user'); navigate('/') }}>Logout</button></div>
       </header>
       <div className="admin-dashboard-layout">
         <aside className="admin-sidebar">

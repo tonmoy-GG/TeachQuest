@@ -20,12 +20,18 @@ export function normalizeStudyResource(resource) {
     ? rawPath
     : `/${rawPath.replace(/^\/+/, '')}`
 
+  const fallbackName = (() => {
+    const lastSegment = rawPath.split('/').pop() || ''
+    if (!lastSegment || lastSegment === 'uploads' || lastSegment === 'upload') return resource.courseCode || 'Resource file'
+    return decodeURIComponent(lastSegment)
+  })()
+
   return {
     ...resource,
     id: resource.id,
     code: resource.courseCode || resource.code || 'Resource',
     trimester: resource.semester || resource.trimester || 'General',
-    fileName: resource.fileName || rawPath.split('/').pop() || resource.courseCode || 'Resource file',
+    fileName: resource.fileName || resource.originalFileName || fallbackName || 'Resource file',
     fileUrl,
     upvotePoints: Number(resource.upvotePoints) || 0,
     verified: Boolean(resource.verified),

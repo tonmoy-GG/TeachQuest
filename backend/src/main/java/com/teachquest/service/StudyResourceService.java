@@ -60,6 +60,7 @@ public class StudyResourceService {
         try {
             Path filePath = uploadPath.resolve(uniqueFileName);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            resource.setFileName(fileName);
             resource.setFilePath(UPLOAD_DIR + uniqueFileName);
             resource.setExternal(false);
             StudyResource saved = studyResourceRepository.save(resource);
@@ -73,6 +74,8 @@ public class StudyResourceService {
     @Transactional
     public StudyResource saveExternalResource(StudyResource resource, String externalUrl) {
         if (resource.getCreatedAt() == null) resource.setCreatedAt(java.time.LocalDateTime.now());
+        String fallbackTitle = externalUrl != null ? externalUrl.substring(externalUrl.lastIndexOf('/') + 1) : "External resource";
+        resource.setFileName(fallbackTitle);
         resource.setFilePath(externalUrl);
         resource.setExternal(true);
         resource.setFileType("url/link");
