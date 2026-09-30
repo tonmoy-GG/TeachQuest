@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Navigate, useNavigate } from 'react-router-dom'
-import { getPostedJobs, getRegisteredUsers, getStoredUser, getUserScopedStorageKey, navItems, savePostedJobs, STORAGE_KEY, syncLocalHiresToBackend, TEACHER_APPLICATIONS_KEY } from '../utils/appData'
+import { getPostedJobs, getRegisteredUsers, getStoredUser, getUserScopedStorageKey, navItems, savePostedJobs, STORAGE_KEY, syncLocalHiresToBackend, syncRegisteredUsers, TEACHER_APPLICATIONS_KEY } from '../utils/appData'
 
 export default function PostedJobsPage() {
   const navigate = useNavigate()
-  const [user, setUser] = useState(() => getStoredUser())
+  const [user] = useState(() => getStoredUser())
   const [jobs, setJobs] = useState(() => getPostedJobs())
   const [expandedJobId, setExpandedJobId] = useState(null)
 
@@ -20,8 +20,6 @@ export default function PostedJobsPage() {
       return
     }
 
-    setUser(currentUser)
-    setJobs(getPostedJobs())
   }, [navigate])
 
   if (!user) {
@@ -37,6 +35,60 @@ export default function PostedJobsPage() {
 
   const handleEdit = (jobId) => {
     navigate(`/jobs?edit=${jobId}`)
+  }
+
+  const handleChatWithApplicant = async (jobId, applicant) => {
+    try {
+      const applicantEmail = String(applicant.email || applicant.id || '').trim().toLowerCase()
+      const users = await syncRegisteredUsers()
+      const applicantUser = users.find((candidate) => String(candidate.email || '').trim().toLowerCase() === applicantEmail)
+      const owner = users.find((candidate) => String(candidate.email || '').trim().toLowerCase() === String(user.email || '').trim().toLowerCase()) || user
+      if (!owner.id || !applicantUser?.id) throw new Error('Could not find the registered account for this applicant.')
+
+      const currentJobs = getPostedJobs()
+      const sourceJob = currentJobs.find((job) => String(job.id) === String(jobId))
+      if (!sourceJob) throw new Error('This job post is no longer available.')
+
+      let backendJobId = sourceJob.backendId
+      if (!backendJobId) {
+        const response = await fetch('/api/jobs/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: sourceJob.title || 'Tutor Request',
+            subject: sourceJob.subject || 'General',
+            days: Number.parseInt(sourceJob.daysPerWeek, 10) || 1,
+            requirements: sourceJob.description || 'No description provided.',
+            address: sourceJob.location || 'Online',
+            salary: sourceJob.salary || 'Negotiable',
+            studentGender: sourceJob.studentGender || 'any',
+            tutorGender: sourceJob.tutorGender || 'any',
+            userId: owner.id,
+          }),
+        })
+        if (!response.ok) throw new Error(await response.text() || 'Unable to prepare this job for chat.')
+
+        const backendJob = await response.json()
+        backendJobId = backendJob.id
+        const jobsWithBackendId = currentJobs.map((job) => String(job.id) === String(jobId) ? { ...job, backendId: backendJobId } : job)
+        savePostedJobs(jobsWithBackendId)
+        setJobs(jobsWithBackendId)
+      }
+
+      const applicationsResponse = await fetch(`/api/applications/job/${backendJobId}`)
+      if (!applicationsResponse.ok) throw new Error('Unable to verify this applicant for chat.')
+      const applications = await applicationsResponse.json()
+      const hasApplication = applications.some((application) => String(application.tutorId) === String(applicantUser.id))
+
+      if (!hasApplication) {
+        const response = await fetch(`/api/applications/apply?jobId=${encodeURIComponent(backendJobId)}&tutorId=${encodeURIComponent(applicantUser.id)}`, { method: 'POST' })
+        if (!response.ok) throw new Error(await response.text() || 'Unable to enable chat for this applicant.')
+      }
+
+      navigate(`/chat?userId=${encodeURIComponent(applicantUser.id)}`)
+    } catch (error) {
+      alert(error.message)
+    }
   }
 
   const handleHireApplicant = async (jobId, applicantId, action = 'hire') => {
@@ -219,6 +271,15 @@ export default function PostedJobsPage() {
                               </small>
                             </div>
                             <div className="applicant-decision-row">
+                              <button
+                                type="button"
+                                className="applicant-chat-btn"
+                                aria-label={`Chat with ${applicant.name}`}
+                                onClick={() => handleChatWithApplicant(job.id, applicant)}
+                              >
+                                <span className="material-symbols-outlined">chat</span>
+                                Chat
+                              </button>
                               <button
                                 type="button"
                                 className={`applicant-approve-btn ${applicant.status === 'Hired' ? 'selected' : ''}`}
