@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "node --test tests/major-features.test.js",
+    "test:ai-quiz": "node --test tests/ai-practice-quiz.test.js",
+    "test:resource-upload": "node --test tests/resource-upload.test.js",
+    "test:community-qa": "node --test tests/community-qa.test.js"
   },
   "dependencies": {
     "react": "^19.2.8",
@@ -23,6 +27,7 @@
     "eslint": "^10.9.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.4",
+    "selenium-webdriver": "^4.38.0",
     "globals": "^17.11.0",
     "vite": "^8.2.2"
   }
