@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { NavLink, Navigate, useNavigate } from 'react-router-dom'
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
+import { NavLink, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { getChatMessages, getHiredChatContacts, getStoredUser, navItems, parseResponse, saveChatMessages, syncRegisteredUsers } from '../utils/appData'
 import GroupChatPanel from '../components/GroupChatPanel'
 
@@ -7,6 +7,7 @@ const accentPalette = ['purple', 'cyan', 'green', 'amber', 'rose', 'slate']
 
 export default function ChatPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [user] = useState(() => getStoredUser())
   const [selectedChat, setSelectedChat] = useState(0)
   const [draft, setDraft] = useState('')
@@ -15,10 +16,30 @@ export default function ChatPage() {
   const imageInputRef = useRef(null)
   const [messagesByChat, setMessagesByChat] = useState(() => getChatMessages())
   const [registeredUsers, setRegisteredUsers] = useState([])
+  const requestedContactId = searchParams.get('userId')
 
   useEffect(() => {
-    syncRegisteredUsers().then((users) => setRegisteredUsers(getHiredChatContacts(users)))
-  }, [])
+    let active = true
+    syncRegisteredUsers().then((users) => {
+      if (!active) return
+      const contacts = getHiredChatContacts(users)
+      const requestedContact = users.find((candidate) => (
+        String(candidate.id) === String(requestedContactId)
+        && String(candidate.id) !== String(user?.id)
+        && String(candidate.userType || '').toLowerCase() !== String(user?.userType || '').toLowerCase()
+      ))
+
+      if (requestedContact) {
+        const requestedIndex = contacts.findIndex((contact) => String(contact.id) === String(requestedContact.id))
+        if (requestedIndex >= 0) contacts.splice(requestedIndex, 1)
+        contacts.unshift(requestedContact)
+      }
+
+      setRegisteredUsers(contacts)
+      if (requestedContact) setSelectedChat(0)
+    })
+    return () => { active = false }
+  }, [requestedContactId, user?.id, user?.userType])
 
   useEffect(() => {
     const currentUser = getStoredUser()
@@ -39,14 +60,10 @@ export default function ChatPage() {
     return () => window.removeEventListener('storage', handleStorage)
   }, [])
 
-  if (!user) {
-    return <Navigate to="/" replace />
-  }
-
   const displayName = user.username || user.email?.split('@')[0] || 'Alex'
   const currentUserEmail = (user.email || '').trim().toLowerCase()
   const currentUserId = Number(user?.id) || null
-  const conversations = registeredUsers
+  const conversations = useMemo(() => registeredUsers
     .filter((member) => {
       const memberEmail = (member.email || '').trim().toLowerCase()
 
@@ -62,7 +79,7 @@ export default function ChatPage() {
       online: index % 2 === 0,
       accent: accentPalette[index % accentPalette.length],
       email: member.email || '',
-    }))
+    })), [registeredUsers, currentUserEmail])
 
   const buildRoomKey = (emailA, emailB) => [String(emailA || '').trim().toLowerCase(), String(emailB || '').trim().toLowerCase()].sort().join('|')
   const activeChat = conversations[Math.min(selectedChat, Math.max(conversations.length - 1, 0))] || null
@@ -115,10 +132,12 @@ export default function ChatPage() {
     }
   }
 
+  const loadDirectChatFromEffect = useEffectEvent((contact) => loadDirectChat(contact))
+
   useEffect(() => {
     if (!activeChat) return
-    void loadDirectChat(activeChat)
-  }, [activeChat, currentUserId])
+    Promise.resolve().then(() => loadDirectChatFromEffect(activeChat))
+  }, [activeChat])
 
   const threadMessages = activeChat
     ? (messagesByChat[activeRoomKey] || [
@@ -163,7 +182,7 @@ export default function ChatPage() {
       setPendingAttachment(null)
 
       await loadDirectChat(activeChat)
-    } catch (error) {
+    } catch {
       const nextMap = {
         ...messagesByChat,
         [activeRoomKey]: [...(messagesByChat[activeRoomKey] || []), {
@@ -198,6 +217,10 @@ export default function ChatPage() {
     { label: 'Reference', type: 'PDF' },
     { label: 'Quiz recap', type: 'IMG' },
   ]
+
+  if (!user) {
+    return <Navigate to="/" replace />
+  }
 
   return (
     <div className="student-dashboard-shell">

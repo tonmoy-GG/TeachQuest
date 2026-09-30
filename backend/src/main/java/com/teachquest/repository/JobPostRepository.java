@@ -17,6 +17,9 @@ public interface JobPostRepository extends JpaRepository<JobPost, Long> {
     @Query("SELECT CASE WHEN COUNT(j) > 0 THEN true ELSE false END FROM JobPost j JOIN com.teachquest.model.JobApplication a ON a.jobId = j.id WHERE j.userId = ?1 AND a.tutorId = ?2 AND UPPER(a.status) = 'HIRED'")
     boolean existsByUserIdAndHiredTutorIdViaApplication(Long userId, Long hiredTutorId);
 
+    @Query("SELECT CASE WHEN COUNT(j) > 0 THEN true ELSE false END FROM JobPost j JOIN com.teachquest.model.JobApplication a ON a.jobId = j.id WHERE j.userId = ?1 AND a.tutorId = ?2")
+    boolean existsByUserIdAndApplicantId(Long userId, Long applicantId);
+
     @Query("SELECT DISTINCT j.userId FROM JobPost j WHERE j.hiredTutorId = ?1")
     List<Long> findStudentIdsByHiredTutorId(Long hiredTutorId);
 

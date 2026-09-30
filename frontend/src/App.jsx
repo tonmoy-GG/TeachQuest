@@ -19,6 +19,9 @@ import QuestionsPage from './pages/QuestionsPage'
 import AdminResourceModerationPage from './pages/AdminResourceModerationPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import AdminLoginPage from './pages/AdminLoginPage'
+import AIPracticeQuizPage from './pages/AIPracticeQuizPage'
+import CertificatesPage from './pages/CertificatesPage'
+import CertificateVerificationPage from './pages/CertificateVerificationPage'
 
 function App() {
   return (
@@ -34,6 +37,9 @@ function App() {
           <Route path="/posted-jobs" element={<PostedJobsPage />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/quiz" element={<QuizPage />} />
+          <Route path="/ai-practice" element={<AIPracticeQuizPage />} />
+          <Route path="/certificates" element={<CertificatesPage />} />
+          <Route path="/verify/:certificateId" element={<CertificateVerificationPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/upload-resources" element={<UploadResourcesPage />} />
           <Route path="/teacher-resources" element={<TeacherResourcesPage />} />

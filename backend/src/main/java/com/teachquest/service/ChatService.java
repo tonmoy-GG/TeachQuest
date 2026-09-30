@@ -126,8 +126,9 @@ public class ChatService {
 
         boolean hired = jobPostRepository.existsByUserIdAndHiredTutorId(studentId, teacherId)
                 || jobPostRepository.existsByUserIdAndHiredTutorIdViaApplication(studentId, teacherId);
-        if (!hired) {
-            throw new IllegalArgumentException("Chat is available only after a tutor has been hired.");
+        boolean applied = jobPostRepository.existsByUserIdAndApplicantId(studentId, teacherId);
+        if (!hired && !applied) {
+            throw new IllegalArgumentException("Chat is available only to tutors who applied for this student's job or have been hired.");
         }
     }
 }

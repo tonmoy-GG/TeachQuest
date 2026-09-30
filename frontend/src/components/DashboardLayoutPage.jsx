@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { NavLink, Navigate, useNavigate } from 'react-router-dom'
 import { getStoredUser, navItems } from '../utils/appData'
 
@@ -11,19 +11,16 @@ const teacherNavItems = [
   { label: 'Upload Resources', to: '/teacher-upload-resources' },
   { label: 'Chat', to: '/teacher-chat' },
   { label: 'Create Quiz', to: '/quiz' },
+  { label: 'AI Practice', to: '/ai-practice' },
+  { label: 'Certificates', to: '/certificates' },
 ]
 
 export default function DashboardLayoutPage({ title, buttonLabel, children }) {
   const navigate = useNavigate()
-  const [user, setUser] = useState(() => getStoredUser())
+  const user = getStoredUser()
 
   useEffect(() => {
-    const currentUser = getStoredUser()
-    if (!currentUser) {
-      navigate('/')
-      return
-    }
-    setUser(currentUser)
+    if (!getStoredUser()) navigate('/')
   }, [navigate])
 
   if (!user) {
@@ -90,9 +87,7 @@ export default function DashboardLayoutPage({ title, buttonLabel, children }) {
             <h2>{title}</h2>
           </div>
 
-          <button type="button" className="primary-soft-button">
-            {buttonLabel}
-          </button>
+          {buttonLabel && <button type="button" className="primary-soft-button">{buttonLabel}</button>}
         </header>
 
         {children}

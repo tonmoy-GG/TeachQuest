@@ -45,6 +45,8 @@ export const navItems = [
   { label: 'Study Resources', to: '/resources' },
   { label: 'Community Q&A', to: '/questions' },
   { label: 'Chat', to: '/chat' },
+  { label: 'AI Practice', to: '/ai-practice' },
+  { label: 'Certificates', to: '/certificates' },
 ]
 
 export const floatingTags = ['📚 Study Resources', '👨‍🏫 Tutor Requests', '💬 Live Chat', '📝 Quiz Progress']
