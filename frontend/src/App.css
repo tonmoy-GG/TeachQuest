@@ -793,7 +793,7 @@
     #090e18;
   color: #f3effc;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
   border: 1px solid rgba(127, 86, 255, 0.8);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
 }
@@ -1836,6 +1836,7 @@
   background: linear-gradient(135deg, rgba(6, 182, 212, 0.14), rgba(8, 145, 178, 0.18));
   color: #cffafe;
 }
+
 .applicant-approve-btn {
   border: 1px solid rgba(96, 165, 250, 0.35);
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(37, 99, 235, 0.18));
@@ -3892,5 +3893,150 @@
   .quiz-form-grid,
   .quiz-options-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Shared student and tutor header: brand/actions above a dedicated navigation row. */
+.dashboard-topbar {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) auto;
+  grid-template-areas:
+    'brand actions'
+    'navigation navigation';
+  align-items: center;
+  justify-content: initial;
+  gap: 0 20px;
+  padding: 0 clamp(14px, 2.2vw, 30px);
+}
+
+.brand-block {
+  grid-area: brand;
+  min-width: 0;
+  padding: 13px 0;
+}
+
+.brand-block h1 {
+  white-space: nowrap;
+}
+
+.main-nav {
+  grid-area: navigation;
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 5px;
+  padding: 8px 0 9px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.main-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-link {
+  display: inline-flex;
+  min-height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 7px clamp(9px, 1vw, 14px);
+  border-radius: 7px;
+  font-size: 0.82rem;
+}
+
+.nav-link.active {
+  color: #b9f3df;
+  background: rgba(36, 173, 137, 0.14);
+  box-shadow: inset 0 -2px 0 #45c49b;
+}
+
+.dashboard-top-actions {
+  grid-area: actions;
+  width: auto;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-topbar {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) auto;
+    grid-template-areas:
+      'brand actions'
+      'navigation navigation';
+    justify-content: initial;
+    flex-wrap: initial;
+  }
+
+  .main-nav {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .dashboard-top-actions {
+    width: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-topbar {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0 8px;
+    padding: 0 12px;
+  }
+
+  .brand-block {
+    min-width: 0;
+  }
+
+  .brand-block h1 {
+    font-size: 0.98rem;
+  }
+
+  .dashboard-top-actions {
+    width: auto;
+    gap: 6px;
+  }
+
+  .main-nav {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    margin: 0 -12px;
+    width: calc(100% + 24px);
+    padding: 7px 12px 9px;
+  }
+
+  .dashboard-search-box {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-topbar {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .dashboard-top-actions {
+    gap: 5px;
+  }
+
+  .dashboard-top-actions .user-meta {
+    display: none;
+  }
+
+  .dashboard-top-actions .icon-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .dashboard-top-actions .logout-button {
+    padding: 7px 9px;
+    font-size: 0.78rem;
   }
 }
